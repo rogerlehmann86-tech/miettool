@@ -1,0 +1,11 @@
+Lehmann Miettool Master
+Version: 5.2
+Stand: 2026-08-20
+
+Neu in 5.2:
+- Suchfunktion für Anfragen/Reservationen im Adminbereich
+- Standardfilter beim Öffnen: Anfragen (pending)
+- dynamische Anzahl je Filter
+- bestätigte, abgelaufene Mieten werden automatisch im Admin-Archiv angezeigt
+- Halbtag Vormittag wechselt nach 12:00 Uhr ins Archiv; Halbtag Nachmittag und Ganztag nach Tagesende
+- keine Datenbankmigration erforderlich; confirmed bleibt confirmed
