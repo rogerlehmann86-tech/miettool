@@ -25,8 +25,9 @@
   <main class="wrap">
     <section class="panel search-panel">
       <div class="field"><label for="fromDate">Abholung</label><input id="fromDate" type="date" /></div>
+      <div class="field"><label for="fromHalf">Abholung ab</label><select id="fromHalf"><option value="am">Vormittag</option><option value="pm">Nachmittag</option></select></div>
       <div class="field"><label for="toDate">Rückgabe</label><input id="toDate" type="date" /></div>
-      <div class="field"><label for="rentalMode">Mietdauer</label><select id="rentalMode"><option value="full">Ganzer Tag / mehrere Tage</option><option value="half_am">½ Tag Vormittag</option><option value="half_pm">½ Tag Nachmittag</option></select></div>
+      <div class="field"><label for="toHalf">Rückgabe bis</label><select id="toHalf"><option value="pm">Abend</option><option value="am">Mittag</option></select></div>
       <div class="field grow"><label for="category">Kategorie</label><select id="category"><option value="all">Alle Mietgeräte</option></select></div>
       <button id="checkBtn" class="btn primary">Verfügbarkeit prüfen</button>
     </section>
@@ -51,6 +52,28 @@
       <button class="btn primary full-btn" type="submit">Mietanfrage senden</button><p class="small muted">Die Verfügbarkeit wird beim Absenden erneut geprüft.</p>
     </form>
   </dialog>
+
+  <dialog id="availabilityDialog" class="availability-dialog">
+    <div class="availability-dialog-inner">
+      <button type="button" class="dialog-close" id="closeAvailabilityDialog" aria-label="Schliessen">×</button>
+      <div class="eyebrow">Verfügbarkeit</div>
+      <h2 id="availabilityTitle">Belegung anzeigen</h2>
+      <p class="muted">Die Anzeige zeigt nur, ob ein Halbtag verfügbar ist. Interne Angaben oder Kundendaten werden nicht angezeigt.</p>
+      <div class="customer-calendar-toolbar">
+        <button type="button" class="btn" id="calendarPrev">← 14 Tage</button>
+        <button type="button" class="btn" id="calendarSelectedDate">Gewähltes Datum</button>
+        <button type="button" class="btn" id="calendarNext">14 Tage →</button>
+      </div>
+      <div class="customer-calendar-legend">
+        <span><i class="cal-swatch free"></i> frei</span>
+        <span><i class="cal-swatch partial"></i> teilweise verfügbar</span>
+        <span><i class="cal-swatch busy"></i> belegt</span>
+      </div>
+      <div id="customerCalendar" class="customer-calendar" aria-live="polite"></div>
+      <p class="small muted">Ein Klick auf einen freien Halbtag übernimmt diesen direkt als neuen Mietzeitraum.</p>
+    </div>
+  </dialog>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="app.js"></script>
 </body>
 </html>

@@ -4,16 +4,21 @@ const db = isDemo ? null : window.supabase.createClient(cfg.supabaseUrl, cfg.sup
 const el=id=>document.getElementById(id);let reservations=[];let products=[];let calendarStart=today();
 function show(msg,error=false,success=false){const n=el('adminNotice');n.textContent=msg;n.className='notice'+(error?' error':'')+(success?' success':'')}
 function modeName(m){return {full:'Ganzer Tag / mehrere Tage',half_am:'½ Tag Vormittag',half_pm:'½ Tag Nachmittag'}[m]||m}
+function startHalf(r){return r?.start_half||(r?.rental_mode==='half_pm'?'pm':'am')}
+function endHalf(r){return r?.end_half||(r?.rental_mode==='half_am'?'am':'pm')}
+function startHalfName(h){return h==='pm'?'Nachmittag':'Vormittag'}
+function endHalfName(h){return h==='am'?'Mittag':'Abend'}
+function dayNumber(s){return Math.round(new Date(s+'T12:00:00Z').getTime()/86400000)}
+function halfIndex(date,half){return dayNumber(date)*2+(half==='pm'?1:0)}
+function periodUnits(from,to,sh,eh){if(!from||!to)return 0;const n=halfIndex(to,eh)-halfIndex(from,sh)+1;return n>0?n/2:0}
+function unitsLabel(u){return Number.isInteger(u)?`${u} Tag(e)`: `${String(u).replace('.',',')} Tag(e)`}
+function periodText(r){const sh=startHalf(r),eh=endHalf(r),u=periodUnits(r.from_date,r.to_date,sh,eh);if(r.from_date===r.to_date&&sh==='am'&&eh==='am')return `${r.from_date} · ½ Tag Vormittag`;if(r.from_date===r.to_date&&sh==='pm'&&eh==='pm')return `${r.from_date} · ½ Tag Nachmittag`;return `${r.from_date} ${startHalfName(sh)} bis ${r.to_date} ${endHalfName(eh)} · ${unitsLabel(u)}`}
 function statusName(s){return {pending:'Anfrage',confirmed:'Bestätigt',cancelled:'Abgelehnt / storniert',blocked:'Gesperrt / Service'}[s]||s}
 function today(){return new Date().toISOString().slice(0,10)}
-function rentalEnd(r){
-  if(!r?.to_date)return null;
-  if(r.rental_mode==='half_am')return new Date(`${r.from_date}T12:00:00`);
-  return new Date(`${r.to_date}T23:59:59.999`);
-}
+function rentalEnd(r){if(!r?.to_date)return null;const d=new Date(`${r.to_date}T00:00:00`);if(endHalf(r)==='am')d.setHours(12);else d.setDate(d.getDate()+1);return d}
 function isArchived(r){const end=rentalEnd(r);return r.status==='confirmed'&&end&&end.getTime()<Date.now()}
 function dateSearchValue(v){if(!v)return '';const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}.${m[2]}.${m[1]}`:String(v)}
-function searchableText(r){return [r.product_name,r.product_id,r.name,r.company,r.email,r.phone,r.note,r.from_date,r.to_date,dateSearchValue(r.from_date),dateSearchValue(r.to_date),modeName(r.rental_mode),statusName(r.status),isArchived(r)?'archiv':''].filter(Boolean).join(' ').toLocaleLowerCase('de-CH')}
+function searchableText(r){return [r.product_name,r.product_id,r.name,r.company,r.email,r.phone,r.note,r.from_date,r.to_date,dateSearchValue(r.from_date),dateSearchValue(r.to_date),periodText(r),modeName(r.rental_mode),startHalfName(startHalf(r)),endHalfName(endHalf(r)),statusName(r.status),isArchived(r)?'archiv':''].filter(Boolean).join(' ').toLocaleLowerCase('de-CH')}
 function updateFilterLabels(){
   const counts={
     pending:reservations.filter(r=>r.status==='pending').length,
@@ -35,7 +40,7 @@ async function sendStatusEmail(reservationId,eventType){
   return data;
 }
 
-function initBlockDates(){const t=today();el('blockFrom').min=t;el('blockTo').min=t;el('blockFrom').value=t;el('blockTo').value=t;el('blockFrom').addEventListener('change',()=>{el('blockTo').min=el('blockFrom').value;if(el('blockTo').value<el('blockFrom').value)el('blockTo').value=el('blockFrom').value});el('blockMode').addEventListener('change',()=>{const half=el('blockMode').value.startsWith('half_');el('blockTo').disabled=half;if(half)el('blockTo').value=el('blockFrom').value})}
+function initBlockDates(){const t=today();el('blockFrom').min=t;el('blockTo').min=t;el('blockFrom').value=t;el('blockTo').value=t;el('blockStartHalf').value='am';el('blockEndHalf').value='pm';const sync=()=>{el('blockTo').min=el('blockFrom').value;if(el('blockTo').value<el('blockFrom').value)el('blockTo').value=el('blockFrom').value;if(el('blockFrom').value===el('blockTo').value&&el('blockStartHalf').value==='pm'&&el('blockEndHalf').value==='am')el('blockEndHalf').value='pm'};['blockFrom','blockTo','blockStartHalf','blockEndHalf'].forEach(id=>el(id).addEventListener('change',sync));sync()}
 async function login(){if(isDemo){el('loginPanel').classList.add('hidden');el('adminApp').classList.remove('hidden');await loadAll();return}const {error}=await db.auth.signInWithPassword({email:el('adminEmail').value,password:el('adminPassword').value});if(error)return show(error.message,true);showAdmin()}
 async function showAdmin(){el('loginPanel').classList.add('hidden');el('adminApp').classList.remove('hidden');await loadAll()}
 async function loadAll(){await loadProducts();await loadReservations()}
@@ -51,23 +56,18 @@ function render(){
   if(f==='pending')rs.sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
   else if(f==='archive')rs.sort((a,b)=>(rentalEnd(b)?.getTime()||0)-(rentalEnd(a)?.getTime()||0));
   else if(f==='confirmed')rs.sort((a,b)=>String(a.from_date||'').localeCompare(String(b.from_date||'')));
-  el('reservationList').innerHTML=rs.map(r=>`<article class="reservation ${r.status}${isArchived(r)?' archived':''}"><div class="reservation-head"><div><h3>${r.product_name||r.product_id}</h3><div class="muted">${r.rental_mode==='full'?`${r.from_date} bis ${r.to_date}`:`${r.from_date} · ${modeName(r.rental_mode)}`}${r.long_term?' · Langzeit-Anfrage':''}</div></div><span class="status-pill">${isArchived(r)?'Archiv':statusName(r.status)}</span></div><div class="reservation-details"><div><strong>${r.status==='blocked'?'Sperrgrund':'Kunde'}</strong><br>${r.status==='blocked'?(r.note||'Interne Sperre'):(r.name||'–')}${r.company?'<br>'+r.company:''}</div><div><strong>Kontakt</strong><br>${r.status==='blocked'?'–':`${r.email||'–'}<br>${r.phone||'–'}`}</div><div><strong>Bemerkung</strong><br>${r.note||'–'}</div></div><div class="reservation-actions">${r.status==='blocked'?`<button class="btn danger smallbtn" onclick="deleteBlock('${r.id}')">Sperre aufheben</button>`:`${r.status!=='confirmed'?`<button class="btn success smallbtn" onclick="setStatus('${r.id}','confirmed')">Bestätigen</button>`:''}${r.status!=='cancelled'?`<button class="btn danger smallbtn" onclick="setStatus('${r.id}','cancelled')">Ablehnen / stornieren</button>`:''}`}</div></article>`).join('')||'<div class="panel">Keine passenden Einträge.</div>'
+  el('reservationList').innerHTML=rs.map(r=>`<article class="reservation ${r.status}${isArchived(r)?' archived':''}"><div class="reservation-head"><div><h3>${r.product_name||r.product_id}</h3><div class="muted">${periodText(r)}${r.long_term?' · Langzeit-Anfrage':''}</div></div><span class="status-pill">${isArchived(r)?'Archiv':statusName(r.status)}</span></div><div class="reservation-details"><div><strong>${r.status==='blocked'?'Sperrgrund':'Kunde'}</strong><br>${r.status==='blocked'?(r.note||'Interne Sperre'):(r.name||'–')}${r.company?'<br>'+r.company:''}</div><div><strong>Kontakt</strong><br>${r.status==='blocked'?'–':`${r.email||'–'}<br>${r.phone||'–'}`}</div><div><strong>Bemerkung</strong><br>${r.note||'–'}</div></div><div class="reservation-actions">${r.status==='blocked'?`<button class="btn danger smallbtn" onclick="deleteBlock('${r.id}')">Sperre aufheben</button>`:`${r.status!=='confirmed'?`<button class="btn success smallbtn" onclick="setStatus('${r.id}','confirmed')">Bestätigen</button>`:''}${r.status!=='cancelled'?`<button class="btn danger smallbtn" onclick="setStatus('${r.id}','cancelled')">Ablehnen / stornieren</button>`:''}`}</div></article>`).join('')||'<div class="panel">Keine passenden Einträge.</div>'
 }
 window.setStatus=async function(id,status){const current=reservations.find(r=>String(r.id)===String(id));if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]');const r=rs.find(x=>x.id===id);if(r)r.status=status;localStorage.setItem('rental_demo_reservations',JSON.stringify(rs));show('Status wurde geändert.',false,true);await loadReservations();return}const {error}=await db.from('reservations').update({status}).eq('id',id);if(error)return show(error.message,true);const canMail=!!String(current?.email||'').trim();try{if(canMail&&(status==='confirmed'||status==='cancelled'))await sendStatusEmail(id,status);show(canMail?(status==='confirmed'?'Reservation bestätigt und Bestätigung an den Kunden versendet.':'Status geändert und Kunde per E-Mail informiert.'):'Status wurde gespeichert. Keine Kunden-E-Mail hinterlegt – es wurde keine E-Mail versendet.',false,true)}catch(mailError){console.error(mailError);show('Status wurde gespeichert, die automatische E-Mail konnte aber nicht versendet werden.',true)}await loadReservations()}
 window.deleteBlock=async function(id){if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]').filter(r=>r.id!==id);localStorage.setItem('rental_demo_reservations',JSON.stringify(rs));show('Sperrzeit wurde aufgehoben.',false,true);await loadReservations();return}const {error}=await db.from('reservations').delete().eq('id',id).eq('status','blocked');if(error)return show(error.message,true);show('Sperrzeit wurde aufgehoben.',false,true);await loadReservations()}
-async function createBlock(){const productId=el('blockProduct').value,from=el('blockFrom').value,to=el('blockTo').value,mode=el('blockMode').value,reason=el('blockReason').value.trim()||'Interne Sperre';if(!productId||!from||!to||to<from)return show('Bitte einen gültigen Zeitraum wählen.',true);try{if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]');const p=products.find(x=>x.id===productId);rs.push({id:crypto.randomUUID(),product_id:productId,product_name:p?.name||productId,from_date:from,to_date:to,rental_mode:mode,status:'blocked',note:reason,created_at:new Date().toISOString()});localStorage.setItem('rental_demo_reservations',JSON.stringify(rs))}else{const {data,error}=await db.rpc('create_rental_block',{p_product_id:productId,p_from:from,p_to:to,p_mode:mode,p_note:reason});if(error)throw error;if(!data)throw new Error('Für diesen Zeitraum ist kein freies Exemplar vorhanden.')}el('blockReason').value='';show('Sperrzeit wurde eingetragen.',false,true);await loadReservations()}catch(e){show(e.message||'Sperrzeit konnte nicht erstellt werden.',true)}}
+async function createBlock(){const productId=el('blockProduct').value,from=el('blockFrom').value,to=el('blockTo').value,sh=el('blockStartHalf').value,eh=el('blockEndHalf').value,reason=el('blockReason').value.trim()||'Interne Sperre';if(!productId||!from||!to||to<from||periodUnits(from,to,sh,eh)<=0)return show('Bitte einen gültigen Zeitraum wählen.',true);try{if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]');const p=products.find(x=>x.id===productId);rs.push({id:crypto.randomUUID(),product_id:productId,product_name:p?.name||productId,from_date:from,to_date:to,start_half:sh,end_half:eh,rental_mode:(from===to&&sh===eh?(sh==='am'?'half_am':'half_pm'):'full'),status:'blocked',note:reason,created_at:new Date().toISOString()});localStorage.setItem('rental_demo_reservations',JSON.stringify(rs))}else{const {data,error}=await db.rpc('create_rental_block_v2',{p_product_id:productId,p_from:from,p_to:to,p_start_half:sh,p_end_half:eh,p_note:reason});if(error)throw error;if(!data)throw new Error('Für diesen Zeitraum ist kein freies Exemplar vorhanden.')}el('blockReason').value='';show('Sperrzeit wurde eingetragen.',false,true);await loadReservations()}catch(e){show(e.message||'Sperrzeit konnte nicht erstellt werden.',true)}}
 
 
 function parseLocalDate(s){const [y,m,d]=String(s).split('-').map(Number);return new Date(y,m-1,d)}
 function dateISO(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
 function addDaysISO(s,n){const d=parseLocalDate(s);d.setDate(d.getDate()+n);return dateISO(d)}
 function formatCalendarDate(s,short=false){const d=parseLocalDate(s);return new Intl.DateTimeFormat('de-CH',short?{weekday:'short',day:'2-digit',month:'2-digit'}:{day:'2-digit',month:'2-digit',year:'numeric'}).format(d)}
-function reservationInterval(r){
-  const start=parseLocalDate(r.from_date),end=parseLocalDate(r.to_date||r.from_date);
-  if(r.rental_mode==='half_am'){const e=new Date(start);e.setHours(12);return [start,e]}
-  if(r.rental_mode==='half_pm'){start.setHours(12);end.setDate(end.getDate()+1);return [start,end]}
-  end.setDate(end.getDate()+1);return [start,end]
-}
+function reservationInterval(r){const start=parseLocalDate(r.from_date),end=parseLocalDate(r.to_date||r.from_date);if(startHalf(r)==='pm')start.setHours(12);if(endHalf(r)==='am')end.setHours(12);else end.setDate(end.getDate()+1);return [start,end]}
 function halfInterval(date,half){const s=parseLocalDate(date),e=parseLocalDate(date);if(half==='am'){e.setHours(12)}else{s.setHours(12);e.setDate(e.getDate()+1)}return [s,e]}
 function reservationOverlapsHalf(r,date,half){const [rs,re]=reservationInterval(r),[hs,he]=halfInterval(date,half);return rs<he&&re>hs}
 function activeCalendarReservations(productId,date,half){return reservations.filter(r=>String(r.product_id)===String(productId)&&['pending','confirmed','blocked'].includes(r.status)&&reservationOverlapsHalf(r,date,half))}
@@ -114,8 +114,8 @@ function renderOccupancyCalendar(){
 function prefillQuickRentalFromCalendar(productId,date){
   if(!el('quickRentalForm'))return;
   const mode=el('calendarClickMode')?.value||'full';
-  el('quickProduct').value=productId;el('quickFrom').value=date;el('quickTo').value=date;el('quickMode').value=mode;
-  const half=mode.startsWith('half_');el('quickTo').disabled=half;el('quickTo').min=date;
+  const map={full:['am','pm'],half_am:['am','am'],half_pm:['pm','pm']};const [sh,eh]=map[mode]||map.full;
+  el('quickProduct').value=productId;el('quickFrom').value=date;el('quickTo').value=date;el('quickStartHalf').value=sh;el('quickEndHalf').value=eh;el('quickTo').min=date;
   updateQuickPrice();
   el('quickRentalForm').scrollIntoView({behavior:'smooth',block:'center'});
   el('quickName')?.focus({preventScroll:true});
@@ -132,13 +132,7 @@ function initOccupancyCalendar(){
   renderOccupancyCalendar();
 }
 
-function quickRentalUnits(){
-  const m=el('quickMode')?.value||'full';
-  if(m==='half_am'||m==='half_pm')return 0.5;
-  const a=el('quickFrom')?.value,b=el('quickTo')?.value;
-  if(!a||!b)return 0;
-  return Math.max(1,Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000)+1);
-}
+function quickRentalUnits(){return periodUnits(el('quickFrom')?.value,el('quickTo')?.value,el('quickStartHalf')?.value||'am',el('quickEndHalf')?.value||'pm')}
 function quickRateFor(p){
   if(!p)return 0;
   const u=quickRentalUnits();
@@ -156,25 +150,13 @@ function updateQuickPrice(){
   if(!p||!u){el('quickPriceBox').textContent='Mietpreis wird nach Geräte- und Datumswahl berechnet.';return}
   const rate=quickRateFor(p),total=rate*u;
   const generatorNote=p.category==='Generatoren'?` · Tarif ${quickMoney(rate)}/Tag`:'';
-  el('quickPriceBox').innerHTML=`Voraussichtlicher Mietpreis: <strong>${quickMoney(total)}</strong><span>${u===0.5?'½ Tag':`${u} Tag(e)`}${generatorNote}</span>`;
+  el('quickPriceBox').innerHTML=`Voraussichtlicher Mietpreis: <strong>${quickMoney(total)}</strong><span>${unitsLabel(u)}${generatorNote}</span>`;
 }
 function initQuickRental(){
   if(!el('quickRentalForm'))return;
-  const t=today();
-  el('quickFrom').min=t;el('quickTo').min=t;el('quickFrom').value=t;el('quickTo').value=t;
-  const sync=()=>{
-    const half=el('quickMode').value.startsWith('half_');
-    el('quickTo').disabled=half;
-    if(half)el('quickTo').value=el('quickFrom').value;
-    else if(el('quickTo').value<el('quickFrom').value)el('quickTo').value=el('quickFrom').value;
-    el('quickTo').min=el('quickFrom').value;
-    updateQuickPrice();
-  };
-  el('quickFrom').addEventListener('change',sync);
-  el('quickTo').addEventListener('change',updateQuickPrice);
-  el('quickMode').addEventListener('change',sync);
-  el('quickProduct').addEventListener('change',updateQuickPrice);
-  sync();
+  const t=today();el('quickFrom').min=t;el('quickTo').min=t;el('quickFrom').value=t;el('quickTo').value=t;el('quickStartHalf').value='am';el('quickEndHalf').value='pm';
+  const sync=()=>{el('quickTo').min=el('quickFrom').value;if(el('quickTo').value<el('quickFrom').value)el('quickTo').value=el('quickFrom').value;if(el('quickFrom').value===el('quickTo').value&&el('quickStartHalf').value==='pm'&&el('quickEndHalf').value==='am')el('quickEndHalf').value='pm';updateQuickPrice()};
+  ['quickFrom','quickTo','quickStartHalf','quickEndHalf','quickProduct'].forEach(id=>el(id).addEventListener('change',sync));sync();
 }
 async function createQuickRental(ev){
   ev.preventDefault();
@@ -183,7 +165,8 @@ async function createQuickRental(ev){
     p_product_id:el('quickProduct').value,
     p_from:el('quickFrom').value,
     p_to:el('quickTo').value,
-    p_mode:el('quickMode').value,
+    p_start_half:el('quickStartHalf').value,
+    p_end_half:el('quickEndHalf').value,
     p_name:el('quickName').value.trim(),
     p_company:el('quickCompany').value.trim()||null,
     p_email:el('quickEmail').value.trim()||null,
@@ -193,10 +176,10 @@ async function createQuickRental(ev){
     p_long_term:el('quickLongTerm').checked,
     p_status:el('quickStatus').value
   };
-  if(!args.p_product_id||!args.p_from||!args.p_to||args.p_to<args.p_from)return show('Bitte einen gültigen Mietzeitraum wählen.',true);
+  if(!args.p_product_id||!args.p_from||!args.p_to||args.p_to<args.p_from||periodUnits(args.p_from,args.p_to,args.p_start_half,args.p_end_half)<=0)return show('Bitte einen gültigen Mietzeitraum wählen.',true);
   if(!args.p_name||!args.p_phone)return show('Kunde/Name und Telefonnummer sind erforderlich.',true);
   try{
-    const {data,error}=await db.rpc('admin_create_rental',args);
+    const {data,error}=await db.rpc('admin_create_rental_v2',args);
     if(error)throw error;
     if(!data)throw new Error('Für den gewählten Zeitraum ist kein freies Exemplar verfügbar.');
     const status=args.p_status==='confirmed'?'bestätigte Vermietung':'Anfrage';

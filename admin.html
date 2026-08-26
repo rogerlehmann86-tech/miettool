@@ -37,9 +37,10 @@
         <div class="section-title"><div><h2>Schnellerfassung Vermietung</h2><p>Telefonische oder direkte Reservation erfassen. E-Mail ist optional.</p></div></div>
         <form id="quickRentalForm" class="quick-rental-form">
           <div class="field grow"><label for="quickProduct">Gerät *</label><select id="quickProduct" required></select></div>
-          <div class="field"><label for="quickFrom">Von *</label><input id="quickFrom" type="date" required /></div>
-          <div class="field"><label for="quickTo">Bis *</label><input id="quickTo" type="date" required /></div>
-          <div class="field"><label for="quickMode">Mietdauer *</label><select id="quickMode"><option value="full">Ganzer Tag / mehrere Tage</option><option value="half_am">½ Tag Vormittag</option><option value="half_pm">½ Tag Nachmittag</option></select></div>
+          <div class="field"><label for="quickFrom">Abholung *</label><input id="quickFrom" type="date" required /></div>
+          <div class="field"><label for="quickStartHalf">Abholung ab *</label><select id="quickStartHalf"><option value="am">Vormittag</option><option value="pm">Nachmittag</option></select></div>
+          <div class="field"><label for="quickTo">Rückgabe *</label><input id="quickTo" type="date" required /></div>
+          <div class="field"><label for="quickEndHalf">Rückgabe bis *</label><select id="quickEndHalf"><option value="pm">Abend</option><option value="am">Mittag</option></select></div>
           <div class="field"><label for="quickStatus">Status *</label><select id="quickStatus"><option value="confirmed" selected>Direkt bestätigt</option><option value="pending">Als Anfrage erfassen</option></select></div>
 
           <div class="field grow"><label for="quickName">Kunde / Name *</label><input id="quickName" required /></div>
@@ -58,8 +59,8 @@
 
       <section class="panel block-panel"><h2>Gerät sperren</h2><p>Für Service, Reparatur, interne Nutzung oder andere Nichtverfügbarkeit.</p><div class="block-form">
         <div class="field grow"><label for="blockProduct">Gerät</label><select id="blockProduct"></select></div>
-        <div class="field"><label for="blockFrom">Von</label><input id="blockFrom" type="date" /></div><div class="field"><label for="blockTo">Bis</label><input id="blockTo" type="date" /></div>
-        <div class="field"><label for="blockMode">Dauer</label><select id="blockMode"><option value="full">Ganzer Tag / mehrere Tage</option><option value="half_am">½ Tag Vormittag</option><option value="half_pm">½ Tag Nachmittag</option></select></div>
+        <div class="field"><label for="blockFrom">Von</label><input id="blockFrom" type="date" /></div><div class="field"><label for="blockStartHalf">ab</label><select id="blockStartHalf"><option value="am">Vormittag</option><option value="pm">Nachmittag</option></select></div><div class="field"><label for="blockTo">Bis</label><input id="blockTo" type="date" /></div>
+        <div class="field"><label for="blockEndHalf">bis</label><select id="blockEndHalf"><option value="pm">Abend</option><option value="am">Mittag</option></select></div>
         <div class="field grow"><label for="blockReason">Grund</label><input id="blockReason" placeholder="z. B. Service / Reparatur" /></div><button id="blockBtn" class="btn primary">Sperrzeit eintragen</button>
       </div></section>
 
