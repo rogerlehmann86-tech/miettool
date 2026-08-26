@@ -18,6 +18,21 @@
       </section>
 
 
+
+      <section class="panel occupancy-panel">
+        <div class="section-title"><div><h2>Belegungskalender</h2><p>Verfügbarkeit aller Mietgeräte auf einen Blick. Grün = frei; die Tageszelle ist in Vormittag und Nachmittag geteilt.</p></div></div>
+        <div class="calendar-toolbar">
+          <div class="field"><label for="calendarCategory">Kategorie</label><select id="calendarCategory"><option value="all">Alle Kategorien</option><option value="Gartengeräte">Gartengeräte</option><option value="Baugeräte">Baugeräte</option><option value="Diverse Geräte">Diverse Geräte</option><option value="Generatoren">Generatoren</option></select></div>
+          <div class="field"><label for="calendarDays">Zeitraum</label><select id="calendarDays"><option value="7">7 Tage</option><option value="14" selected>14 Tage</option><option value="30">30 Tage</option></select></div>
+          <div class="field"><label for="calendarClickMode">Klick übernimmt</label><select id="calendarClickMode"><option value="full" selected>Ganzer Tag</option><option value="half_am">½ Tag Vormittag</option><option value="half_pm">½ Tag Nachmittag</option></select></div>
+          <div class="calendar-nav"><button id="calendarPrev" class="btn" type="button">← Zurück</button><button id="calendarToday" class="btn" type="button">Heute</button><button id="calendarNext" class="btn" type="button">Weiter →</button></div>
+          <div id="calendarRangeLabel" class="calendar-range-label"></div>
+        </div>
+        <div class="calendar-legend" aria-label="Legende"><span><i class="legend-swatch free"></i> frei</span><span><i class="legend-swatch pending"></i> Anfrage</span><span><i class="legend-swatch confirmed"></i> vermietet</span><span><i class="legend-swatch blocked"></i> Service / gesperrt</span><span><i class="legend-swatch partial"></i> teilweise verfügbar</span></div>
+        <div class="occupancy-scroll"><div id="occupancyCalendar" class="occupancy-calendar"></div></div>
+        <p class="small muted calendar-hint">Klick auf einen Tag übernimmt Gerät und Datum in die Schnellerfassung. Bei „Ganzer Tag“ muss Vormittag und Nachmittag noch Kapazität frei sein; bei Halbtag nur der gewählte Tagesabschnitt.</p>
+      </section>
+
       <section class="panel quick-rental-panel">
         <div class="section-title"><div><h2>Schnellerfassung Vermietung</h2><p>Telefonische oder direkte Reservation erfassen. E-Mail ist optional.</p></div></div>
         <form id="quickRentalForm" class="quick-rental-form">

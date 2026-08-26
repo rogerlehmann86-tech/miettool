@@ -1,7 +1,7 @@
 const cfg = window.RENTAL_CONFIG || {};
 const isDemo = !cfg.supabaseUrl || cfg.supabaseUrl.includes('YOUR_');
 const db = isDemo ? null : window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
-const el=id=>document.getElementById(id);let reservations=[];let products=[];
+const el=id=>document.getElementById(id);let reservations=[];let products=[];let calendarStart=today();
 function show(msg,error=false,success=false){const n=el('adminNotice');n.textContent=msg;n.className='notice'+(error?' error':'')+(success?' success':'')}
 function modeName(m){return {full:'Ganzer Tag / mehrere Tage',half_am:'½ Tag Vormittag',half_pm:'½ Tag Nachmittag'}[m]||m}
 function statusName(s){return {pending:'Anfrage',confirmed:'Bestätigt',cancelled:'Abgelehnt / storniert',blocked:'Gesperrt / Service'}[s]||s}
@@ -39,8 +39,8 @@ function initBlockDates(){const t=today();el('blockFrom').min=t;el('blockTo').mi
 async function login(){if(isDemo){el('loginPanel').classList.add('hidden');el('adminApp').classList.remove('hidden');await loadAll();return}const {error}=await db.auth.signInWithPassword({email:el('adminEmail').value,password:el('adminPassword').value});if(error)return show(error.message,true);showAdmin()}
 async function showAdmin(){el('loginPanel').classList.add('hidden');el('adminApp').classList.remove('hidden');await loadAll()}
 async function loadAll(){await loadProducts();await loadReservations()}
-async function loadProducts(){if(isDemo){products=[{id:'vertikutierer',name:'Vertikutierer'},{id:'holzhaecksler',name:'Holzhäcksler'},{id:'heckenschere',name:'Heckenschere'},{id:'balkenmaeher',name:'Balkenmäher'},{id:'bodenfraese',name:'Bodenfräse'},{id:'motorhacke',name:'Motorhacke'},{id:'motorsaege-462',name:'Motorsäge 50 cm'},{id:'motorsaege-211',name:'Motorsäge 35 cm'},{id:'stabheckenschere',name:'Stabheckenschere'},{id:'fadenmaeher',name:'Fadenmäher'},{id:'motorsense',name:'Rücktragbare Motorsense'},{id:'plattenvibrator',name:'Plattenvibrator'},{id:'erdbohrer',name:'Erdbohrer'},{id:'hochdruckreiniger',name:'Hochdruckreiniger'},{id:'tauchpumpe',name:'Tauchpumpe'},{id:'holzspalter',name:'Holzspalter'},{id:'unkrautbuerste',name:'Unkrautbürste'},{id:'eu20i',name:'Honda EU20i'},{id:'cx7000t',name:'CGM CX7000T'},{id:'v18y',name:'CGM V18Y'},{id:'v60f',name:'CGM V60F'}]}else{const {data,error}=await db.from('products_with_quantity').select('*').order('sort_order');if(error)return show(error.message,true);products=data||[]}const activeProducts=products.filter(p=>p.active!==false);el('blockProduct').innerHTML=activeProducts.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');if(el('quickProduct'))el('quickProduct').innerHTML=activeProducts.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');renderProductAdmin();updateQuickPrice()}
-async function loadReservations(){if(isDemo)reservations=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]').map(r=>({...r,product_name:r.product_name||products.find(p=>p.id===r.product_id)?.name||r.product_id}));else{const {data,error}=await db.from('admin_reservations').select('*').order('from_date',{ascending:true});if(error)return show(error.message,true);reservations=data||[]}updateFilterLabels();render()}
+async function loadProducts(){if(isDemo){products=[{id:'vertikutierer',name:'Vertikutierer'},{id:'holzhaecksler',name:'Holzhäcksler'},{id:'heckenschere',name:'Heckenschere'},{id:'balkenmaeher',name:'Balkenmäher'},{id:'bodenfraese',name:'Bodenfräse'},{id:'motorhacke',name:'Motorhacke'},{id:'motorsaege-462',name:'Motorsäge 50 cm'},{id:'motorsaege-211',name:'Motorsäge 35 cm'},{id:'stabheckenschere',name:'Stabheckenschere'},{id:'fadenmaeher',name:'Fadenmäher'},{id:'motorsense',name:'Rücktragbare Motorsense'},{id:'plattenvibrator',name:'Plattenvibrator'},{id:'erdbohrer',name:'Erdbohrer'},{id:'hochdruckreiniger',name:'Hochdruckreiniger'},{id:'tauchpumpe',name:'Tauchpumpe'},{id:'holzspalter',name:'Holzspalter'},{id:'unkrautbuerste',name:'Unkrautbürste'},{id:'eu20i',name:'Honda EU20i'},{id:'cx7000t',name:'CGM CX7000T'},{id:'v18y',name:'CGM V18Y'},{id:'v60f',name:'CGM V60F'}]}else{const {data,error}=await db.from('products_with_quantity').select('*').order('sort_order');if(error)return show(error.message,true);products=data||[]}const activeProducts=products.filter(p=>p.active!==false);el('blockProduct').innerHTML=activeProducts.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');if(el('quickProduct'))el('quickProduct').innerHTML=activeProducts.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');renderProductAdmin();updateQuickPrice();renderOccupancyCalendar()}
+async function loadReservations(){if(isDemo)reservations=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]').map(r=>({...r,product_name:r.product_name||products.find(p=>p.id===r.product_id)?.name||r.product_id}));else{const {data,error}=await db.from('admin_reservations').select('*').order('from_date',{ascending:true});if(error)return show(error.message,true);reservations=data||[]}updateFilterLabels();render();renderOccupancyCalendar()}
 function render(){
   const f=el('statusFilter').value;
   const q=(el('reservationSearch')?.value||'').trim().toLocaleLowerCase('de-CH');
@@ -56,6 +56,81 @@ function render(){
 window.setStatus=async function(id,status){const current=reservations.find(r=>String(r.id)===String(id));if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]');const r=rs.find(x=>x.id===id);if(r)r.status=status;localStorage.setItem('rental_demo_reservations',JSON.stringify(rs));show('Status wurde geändert.',false,true);await loadReservations();return}const {error}=await db.from('reservations').update({status}).eq('id',id);if(error)return show(error.message,true);const canMail=!!String(current?.email||'').trim();try{if(canMail&&(status==='confirmed'||status==='cancelled'))await sendStatusEmail(id,status);show(canMail?(status==='confirmed'?'Reservation bestätigt und Bestätigung an den Kunden versendet.':'Status geändert und Kunde per E-Mail informiert.'):'Status wurde gespeichert. Keine Kunden-E-Mail hinterlegt – es wurde keine E-Mail versendet.',false,true)}catch(mailError){console.error(mailError);show('Status wurde gespeichert, die automatische E-Mail konnte aber nicht versendet werden.',true)}await loadReservations()}
 window.deleteBlock=async function(id){if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]').filter(r=>r.id!==id);localStorage.setItem('rental_demo_reservations',JSON.stringify(rs));show('Sperrzeit wurde aufgehoben.',false,true);await loadReservations();return}const {error}=await db.from('reservations').delete().eq('id',id).eq('status','blocked');if(error)return show(error.message,true);show('Sperrzeit wurde aufgehoben.',false,true);await loadReservations()}
 async function createBlock(){const productId=el('blockProduct').value,from=el('blockFrom').value,to=el('blockTo').value,mode=el('blockMode').value,reason=el('blockReason').value.trim()||'Interne Sperre';if(!productId||!from||!to||to<from)return show('Bitte einen gültigen Zeitraum wählen.',true);try{if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]');const p=products.find(x=>x.id===productId);rs.push({id:crypto.randomUUID(),product_id:productId,product_name:p?.name||productId,from_date:from,to_date:to,rental_mode:mode,status:'blocked',note:reason,created_at:new Date().toISOString()});localStorage.setItem('rental_demo_reservations',JSON.stringify(rs))}else{const {data,error}=await db.rpc('create_rental_block',{p_product_id:productId,p_from:from,p_to:to,p_mode:mode,p_note:reason});if(error)throw error;if(!data)throw new Error('Für diesen Zeitraum ist kein freies Exemplar vorhanden.')}el('blockReason').value='';show('Sperrzeit wurde eingetragen.',false,true);await loadReservations()}catch(e){show(e.message||'Sperrzeit konnte nicht erstellt werden.',true)}}
+
+
+function parseLocalDate(s){const [y,m,d]=String(s).split('-').map(Number);return new Date(y,m-1,d)}
+function dateISO(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
+function addDaysISO(s,n){const d=parseLocalDate(s);d.setDate(d.getDate()+n);return dateISO(d)}
+function formatCalendarDate(s,short=false){const d=parseLocalDate(s);return new Intl.DateTimeFormat('de-CH',short?{weekday:'short',day:'2-digit',month:'2-digit'}:{day:'2-digit',month:'2-digit',year:'numeric'}).format(d)}
+function reservationInterval(r){
+  const start=parseLocalDate(r.from_date),end=parseLocalDate(r.to_date||r.from_date);
+  if(r.rental_mode==='half_am'){const e=new Date(start);e.setHours(12);return [start,e]}
+  if(r.rental_mode==='half_pm'){start.setHours(12);end.setDate(end.getDate()+1);return [start,end]}
+  end.setDate(end.getDate()+1);return [start,end]
+}
+function halfInterval(date,half){const s=parseLocalDate(date),e=parseLocalDate(date);if(half==='am'){e.setHours(12)}else{s.setHours(12);e.setDate(e.getDate()+1)}return [s,e]}
+function reservationOverlapsHalf(r,date,half){const [rs,re]=reservationInterval(r),[hs,he]=halfInterval(date,half);return rs<he&&re>hs}
+function activeCalendarReservations(productId,date,half){return reservations.filter(r=>String(r.product_id)===String(productId)&&['pending','confirmed','blocked'].includes(r.status)&&reservationOverlapsHalf(r,date,half))}
+function slotState(product,date,half){
+  const qty=Math.max(0,Number(product.quantity||0));
+  const rs=activeCalendarReservations(product.id,date,half);
+  const unitKeys=new Set(rs.map(r=>r.internal_name||r.id));const occupied=Math.min(qty,unitKeys.size),free=Math.max(0,qty-occupied);
+  let cls='free',label=qty>1?`${qty} frei`:'frei';
+  if(rs.length){
+    if(free>0){cls='partial';label=`${free}/${qty} frei`}
+    else if(rs.every(r=>r.status==='blocked')){cls='blocked';label='gesperrt'}
+    else if(rs.some(r=>r.status==='confirmed')){cls='confirmed';label='belegt'}
+    else{cls='pending';label='Anfrage'}
+  }
+  const detail=rs.map(r=>r.status==='blocked'?`Service: ${r.note||'interne Sperre'}`:`${statusName(r.status)}: ${r.name||r.company||'Kunde'}`).join(' · ');
+  return {qty,rs,occupied,free,cls,label,detail};
+}
+function canCalendarBook(product,date,mode){
+  const am=slotState(product,date,'am'),pm=slotState(product,date,'pm');
+  if(mode==='half_am')return am.free>0;
+  if(mode==='half_pm')return pm.free>0;
+  const occupiedUnits=new Set([...am.rs,...pm.rs].map(r=>r.internal_name||r.id));
+  return occupiedUnits.size<Math.max(0,Number(product.quantity||0));
+}
+function calendarCellTitle(product,date){
+  const am=slotState(product,date,'am'),pm=slotState(product,date,'pm');
+  const line=(name,s)=>`${name}: ${s.label}${s.detail?' – '+s.detail:''}`;
+  return `${product.name} · ${formatCalendarDate(date)}\n${line('Vormittag',am)}\n${line('Nachmittag',pm)}`;
+}
+function renderOccupancyCalendar(){
+  const box=el('occupancyCalendar');if(!box||!products.length)return;
+  const days=Math.max(1,Number(el('calendarDays')?.value||14));
+  const cat=el('calendarCategory')?.value||'all';
+  const list=products.filter(p=>p.active!==false&&(cat==='all'||p.category===cat));
+  const dates=Array.from({length:days},(_,i)=>addDaysISO(calendarStart,i));
+  const last=dates[dates.length-1];
+  if(el('calendarRangeLabel'))el('calendarRangeLabel').textContent=`${formatCalendarDate(calendarStart)} – ${formatCalendarDate(last)}`;
+  const cols=`minmax(190px, 1.55fr) repeat(${dates.length}, minmax(58px, .48fr))`;
+  const head=`<div class="calendar-row calendar-head" style="grid-template-columns:${cols}"><div class="calendar-device-head">Mietgerät</div>${dates.map(d=>{const dt=parseLocalDate(d),weekend=[0,6].includes(dt.getDay()),isToday=d===today();return `<div class="calendar-day-head${weekend?' weekend':''}${isToday?' today':''}"><strong>${new Intl.DateTimeFormat('de-CH',{weekday:'short'}).format(dt)}</strong><span>${new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'2-digit'}).format(dt)}</span></div>`}).join('')}</div>`;
+  const rows=list.map(p=>`<div class="calendar-row" style="grid-template-columns:${cols}"><div class="calendar-device"><strong>${esc(p.name)}</strong><span>${esc(p.category)} · ${Number(p.quantity||0)} Stk.</span></div>${dates.map(d=>{const am=slotState(p,d,'am'),pm=slotState(p,d,'pm'),mode=el('calendarClickMode')?.value||'full',can=canCalendarBook(p,d,mode);return `<button type="button" class="calendar-cell${can?' bookable':' not-bookable'}" data-product="${p.id}" data-date="${d}" title="${esc(calendarCellTitle(p,d))}" aria-label="${esc(p.name+' '+d)}"><span class="calendar-half am ${am.cls}"><b>VM</b><small>${esc(am.label)}</small></span><span class="calendar-half pm ${pm.cls}"><b>NM</b><small>${esc(pm.label)}</small></span></button>`}).join('')}</div>`).join('');
+  box.innerHTML=head+(rows||'<div class="calendar-empty">Keine aktiven Mietgeräte in dieser Kategorie.</div>');
+  box.querySelectorAll('.calendar-cell.bookable').forEach(btn=>btn.addEventListener('click',()=>prefillQuickRentalFromCalendar(btn.dataset.product,btn.dataset.date)));
+}
+function prefillQuickRentalFromCalendar(productId,date){
+  if(!el('quickRentalForm'))return;
+  const mode=el('calendarClickMode')?.value||'full';
+  el('quickProduct').value=productId;el('quickFrom').value=date;el('quickTo').value=date;el('quickMode').value=mode;
+  const half=mode.startsWith('half_');el('quickTo').disabled=half;el('quickTo').min=date;
+  updateQuickPrice();
+  el('quickRentalForm').scrollIntoView({behavior:'smooth',block:'center'});
+  el('quickName')?.focus({preventScroll:true});
+}
+function initOccupancyCalendar(){
+  if(!el('occupancyCalendar'))return;
+  calendarStart=today();
+  el('calendarCategory')?.addEventListener('change',renderOccupancyCalendar);
+  el('calendarDays')?.addEventListener('change',renderOccupancyCalendar);
+  el('calendarClickMode')?.addEventListener('change',renderOccupancyCalendar);
+  el('calendarPrev')?.addEventListener('click',()=>{calendarStart=addDaysISO(calendarStart,-Number(el('calendarDays')?.value||14));renderOccupancyCalendar()});
+  el('calendarNext')?.addEventListener('click',()=>{calendarStart=addDaysISO(calendarStart,Number(el('calendarDays')?.value||14));renderOccupancyCalendar()});
+  el('calendarToday')?.addEventListener('click',()=>{calendarStart=today();renderOccupancyCalendar()});
+  renderOccupancyCalendar();
+}
 
 function quickRentalUnits(){
   const m=el('quickMode')?.value||'full';
@@ -132,7 +207,7 @@ async function createQuickRental(ev){
 }
 
 async function logout(){if(!isDemo)await db.auth.signOut();el('adminApp').classList.add('hidden');el('loginPanel').classList.remove('hidden')}
-el('loginBtn').addEventListener('click',login);el('refreshBtn').addEventListener('click',loadAll);el('logoutBtn').addEventListener('click',logout);el('statusFilter').addEventListener('change',render);el('reservationSearch')?.addEventListener('input',render);el('blockBtn').addEventListener('click',createBlock);el('quickRentalForm')?.addEventListener('submit',createQuickRental);initBlockDates();initQuickRental();
+el('loginBtn').addEventListener('click',login);el('refreshBtn').addEventListener('click',loadAll);el('logoutBtn').addEventListener('click',logout);el('statusFilter').addEventListener('change',render);el('reservationSearch')?.addEventListener('input',render);el('blockBtn').addEventListener('click',createBlock);el('quickRentalForm')?.addEventListener('submit',createQuickRental);initBlockDates();initQuickRental();initOccupancyCalendar();
 (async()=>{if(isDemo){el('adminEmail').placeholder='Demo: keine Anmeldung nötig';el('adminPassword').placeholder='Demo: keine Anmeldung nötig';return}const {data}=await db.auth.getSession();if(data.session)showAdmin()})();
 
 
