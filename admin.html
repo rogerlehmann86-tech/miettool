@@ -17,6 +17,30 @@
         <section id="adminNotice" class="notice hidden"></section><p class="admin-mail-note">E-Mail-Benachrichtigungen: <strong>info@lehmann-gt.ch</strong></p><div id="reservationList" class="reservation-list"></div>
       </section>
 
+
+      <section class="panel quick-rental-panel">
+        <div class="section-title"><div><h2>Schnellerfassung Vermietung</h2><p>Telefonische oder direkte Reservation erfassen. E-Mail ist optional.</p></div></div>
+        <form id="quickRentalForm" class="quick-rental-form">
+          <div class="field grow"><label for="quickProduct">Gerät *</label><select id="quickProduct" required></select></div>
+          <div class="field"><label for="quickFrom">Von *</label><input id="quickFrom" type="date" required /></div>
+          <div class="field"><label for="quickTo">Bis *</label><input id="quickTo" type="date" required /></div>
+          <div class="field"><label for="quickMode">Mietdauer *</label><select id="quickMode"><option value="full">Ganzer Tag / mehrere Tage</option><option value="half_am">½ Tag Vormittag</option><option value="half_pm">½ Tag Nachmittag</option></select></div>
+          <div class="field"><label for="quickStatus">Status *</label><select id="quickStatus"><option value="confirmed" selected>Direkt bestätigt</option><option value="pending">Als Anfrage erfassen</option></select></div>
+
+          <div class="field grow"><label for="quickName">Kunde / Name *</label><input id="quickName" required /></div>
+          <div class="field"><label for="quickPhone">Telefon *</label><input id="quickPhone" type="tel" required /></div>
+          <div class="field grow"><label for="quickEmail">E-Mail optional</label><input id="quickEmail" type="email" placeholder="Kann leer bleiben" /></div>
+          <div class="field grow"><label for="quickCompany">Firma</label><input id="quickCompany" /></div>
+          <div class="field full"><label for="quickAddress">Adresse</label><input id="quickAddress" /></div>
+          <div class="field full"><label for="quickNote">Bemerkung / Einsatzzweck</label><textarea id="quickNote" rows="2"></textarea></div>
+          <label class="checkline quick-longterm"><input id="quickLongTerm" type="checkbox" /> Langzeitmiete / spezielle Konditionen</label>
+
+          <div id="quickPriceBox" class="quick-price-box">Mietpreis wird nach Geräte- und Datumswahl berechnet.</div>
+          <button id="quickRentalBtn" class="btn primary" type="submit">Vermietung erfassen</button>
+        </form>
+        <p class="small muted quick-hint">Bei einer Schnellerfassung wird keine interne E-Mail ausgelöst. Ist keine Kunden-E-Mail vorhanden, werden auch bei späteren Statusänderungen keine Kundenmails versendet.</p>
+      </section>
+
       <section class="panel block-panel"><h2>Gerät sperren</h2><p>Für Service, Reparatur, interne Nutzung oder andere Nichtverfügbarkeit.</p><div class="block-form">
         <div class="field grow"><label for="blockProduct">Gerät</label><select id="blockProduct"></select></div>
         <div class="field"><label for="blockFrom">Von</label><input id="blockFrom" type="date" /></div><div class="field"><label for="blockTo">Bis</label><input id="blockTo" type="date" /></div>

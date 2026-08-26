@@ -39,7 +39,7 @@ function initBlockDates(){const t=today();el('blockFrom').min=t;el('blockTo').mi
 async function login(){if(isDemo){el('loginPanel').classList.add('hidden');el('adminApp').classList.remove('hidden');await loadAll();return}const {error}=await db.auth.signInWithPassword({email:el('adminEmail').value,password:el('adminPassword').value});if(error)return show(error.message,true);showAdmin()}
 async function showAdmin(){el('loginPanel').classList.add('hidden');el('adminApp').classList.remove('hidden');await loadAll()}
 async function loadAll(){await loadProducts();await loadReservations()}
-async function loadProducts(){if(isDemo){products=[{id:'vertikutierer',name:'Vertikutierer'},{id:'holzhaecksler',name:'Holzhäcksler'},{id:'heckenschere',name:'Heckenschere'},{id:'balkenmaeher',name:'Balkenmäher'},{id:'bodenfraese',name:'Bodenfräse'},{id:'motorhacke',name:'Motorhacke'},{id:'motorsaege-462',name:'Motorsäge 50 cm'},{id:'motorsaege-211',name:'Motorsäge 35 cm'},{id:'stabheckenschere',name:'Stabheckenschere'},{id:'fadenmaeher',name:'Fadenmäher'},{id:'motorsense',name:'Rücktragbare Motorsense'},{id:'plattenvibrator',name:'Plattenvibrator'},{id:'erdbohrer',name:'Erdbohrer'},{id:'hochdruckreiniger',name:'Hochdruckreiniger'},{id:'tauchpumpe',name:'Tauchpumpe'},{id:'holzspalter',name:'Holzspalter'},{id:'unkrautbuerste',name:'Unkrautbürste'},{id:'eu20i',name:'Honda EU20i'},{id:'cx7000t',name:'CGM CX7000T'},{id:'v18y',name:'CGM V18Y'},{id:'v60f',name:'CGM V60F'}]}else{const {data,error}=await db.from('products_with_quantity').select('*').order('sort_order');if(error)return show(error.message,true);products=data||[]}el('blockProduct').innerHTML=products.filter(p=>p.active!==false).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');renderProductAdmin()}
+async function loadProducts(){if(isDemo){products=[{id:'vertikutierer',name:'Vertikutierer'},{id:'holzhaecksler',name:'Holzhäcksler'},{id:'heckenschere',name:'Heckenschere'},{id:'balkenmaeher',name:'Balkenmäher'},{id:'bodenfraese',name:'Bodenfräse'},{id:'motorhacke',name:'Motorhacke'},{id:'motorsaege-462',name:'Motorsäge 50 cm'},{id:'motorsaege-211',name:'Motorsäge 35 cm'},{id:'stabheckenschere',name:'Stabheckenschere'},{id:'fadenmaeher',name:'Fadenmäher'},{id:'motorsense',name:'Rücktragbare Motorsense'},{id:'plattenvibrator',name:'Plattenvibrator'},{id:'erdbohrer',name:'Erdbohrer'},{id:'hochdruckreiniger',name:'Hochdruckreiniger'},{id:'tauchpumpe',name:'Tauchpumpe'},{id:'holzspalter',name:'Holzspalter'},{id:'unkrautbuerste',name:'Unkrautbürste'},{id:'eu20i',name:'Honda EU20i'},{id:'cx7000t',name:'CGM CX7000T'},{id:'v18y',name:'CGM V18Y'},{id:'v60f',name:'CGM V60F'}]}else{const {data,error}=await db.from('products_with_quantity').select('*').order('sort_order');if(error)return show(error.message,true);products=data||[]}const activeProducts=products.filter(p=>p.active!==false);el('blockProduct').innerHTML=activeProducts.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');if(el('quickProduct'))el('quickProduct').innerHTML=activeProducts.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');renderProductAdmin();updateQuickPrice()}
 async function loadReservations(){if(isDemo)reservations=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]').map(r=>({...r,product_name:r.product_name||products.find(p=>p.id===r.product_id)?.name||r.product_id}));else{const {data,error}=await db.from('admin_reservations').select('*').order('from_date',{ascending:true});if(error)return show(error.message,true);reservations=data||[]}updateFilterLabels();render()}
 function render(){
   const f=el('statusFilter').value;
@@ -53,11 +53,86 @@ function render(){
   else if(f==='confirmed')rs.sort((a,b)=>String(a.from_date||'').localeCompare(String(b.from_date||'')));
   el('reservationList').innerHTML=rs.map(r=>`<article class="reservation ${r.status}${isArchived(r)?' archived':''}"><div class="reservation-head"><div><h3>${r.product_name||r.product_id}</h3><div class="muted">${r.rental_mode==='full'?`${r.from_date} bis ${r.to_date}`:`${r.from_date} · ${modeName(r.rental_mode)}`}${r.long_term?' · Langzeit-Anfrage':''}</div></div><span class="status-pill">${isArchived(r)?'Archiv':statusName(r.status)}</span></div><div class="reservation-details"><div><strong>${r.status==='blocked'?'Sperrgrund':'Kunde'}</strong><br>${r.status==='blocked'?(r.note||'Interne Sperre'):(r.name||'–')}${r.company?'<br>'+r.company:''}</div><div><strong>Kontakt</strong><br>${r.status==='blocked'?'–':`${r.email||'–'}<br>${r.phone||'–'}`}</div><div><strong>Bemerkung</strong><br>${r.note||'–'}</div></div><div class="reservation-actions">${r.status==='blocked'?`<button class="btn danger smallbtn" onclick="deleteBlock('${r.id}')">Sperre aufheben</button>`:`${r.status!=='confirmed'?`<button class="btn success smallbtn" onclick="setStatus('${r.id}','confirmed')">Bestätigen</button>`:''}${r.status!=='cancelled'?`<button class="btn danger smallbtn" onclick="setStatus('${r.id}','cancelled')">Ablehnen / stornieren</button>`:''}`}</div></article>`).join('')||'<div class="panel">Keine passenden Einträge.</div>'
 }
-window.setStatus=async function(id,status){if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]');const r=rs.find(x=>x.id===id);if(r)r.status=status;localStorage.setItem('rental_demo_reservations',JSON.stringify(rs));show(status==='confirmed'?'Reservation bestätigt. Im Livebetrieb wird dem Kunden automatisch die Bestätigung gemailt.':'Status geändert. Im Livebetrieb wird der Kunde automatisch per E-Mail informiert.',false,true);await loadReservations();return}const {error}=await db.from('reservations').update({status}).eq('id',id);if(error)return show(error.message,true);try{if(status==='confirmed'||status==='cancelled')await sendStatusEmail(id,status);show(status==='confirmed'?'Reservation bestätigt und Bestätigung an den Kunden versendet.':'Status geändert und Kunde per E-Mail informiert.',false,true)}catch(mailError){console.error(mailError);show('Status wurde gespeichert, die automatische E-Mail konnte aber nicht versendet werden.',true)}await loadReservations()}
+window.setStatus=async function(id,status){const current=reservations.find(r=>String(r.id)===String(id));if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]');const r=rs.find(x=>x.id===id);if(r)r.status=status;localStorage.setItem('rental_demo_reservations',JSON.stringify(rs));show('Status wurde geändert.',false,true);await loadReservations();return}const {error}=await db.from('reservations').update({status}).eq('id',id);if(error)return show(error.message,true);const canMail=!!String(current?.email||'').trim();try{if(canMail&&(status==='confirmed'||status==='cancelled'))await sendStatusEmail(id,status);show(canMail?(status==='confirmed'?'Reservation bestätigt und Bestätigung an den Kunden versendet.':'Status geändert und Kunde per E-Mail informiert.'):'Status wurde gespeichert. Keine Kunden-E-Mail hinterlegt – es wurde keine E-Mail versendet.',false,true)}catch(mailError){console.error(mailError);show('Status wurde gespeichert, die automatische E-Mail konnte aber nicht versendet werden.',true)}await loadReservations()}
 window.deleteBlock=async function(id){if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]').filter(r=>r.id!==id);localStorage.setItem('rental_demo_reservations',JSON.stringify(rs));show('Sperrzeit wurde aufgehoben.',false,true);await loadReservations();return}const {error}=await db.from('reservations').delete().eq('id',id).eq('status','blocked');if(error)return show(error.message,true);show('Sperrzeit wurde aufgehoben.',false,true);await loadReservations()}
 async function createBlock(){const productId=el('blockProduct').value,from=el('blockFrom').value,to=el('blockTo').value,mode=el('blockMode').value,reason=el('blockReason').value.trim()||'Interne Sperre';if(!productId||!from||!to||to<from)return show('Bitte einen gültigen Zeitraum wählen.',true);try{if(isDemo){const rs=JSON.parse(localStorage.getItem('rental_demo_reservations')||'[]');const p=products.find(x=>x.id===productId);rs.push({id:crypto.randomUUID(),product_id:productId,product_name:p?.name||productId,from_date:from,to_date:to,rental_mode:mode,status:'blocked',note:reason,created_at:new Date().toISOString()});localStorage.setItem('rental_demo_reservations',JSON.stringify(rs))}else{const {data,error}=await db.rpc('create_rental_block',{p_product_id:productId,p_from:from,p_to:to,p_mode:mode,p_note:reason});if(error)throw error;if(!data)throw new Error('Für diesen Zeitraum ist kein freies Exemplar vorhanden.')}el('blockReason').value='';show('Sperrzeit wurde eingetragen.',false,true);await loadReservations()}catch(e){show(e.message||'Sperrzeit konnte nicht erstellt werden.',true)}}
+
+function quickRentalUnits(){
+  const m=el('quickMode')?.value||'full';
+  if(m==='half_am'||m==='half_pm')return 0.5;
+  const a=el('quickFrom')?.value,b=el('quickTo')?.value;
+  if(!a||!b)return 0;
+  return Math.max(1,Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000)+1);
+}
+function quickRateFor(p){
+  if(!p)return 0;
+  const u=quickRentalUnits();
+  const tier20=p.tier20_price??p.tier20;
+  const tier5=p.tier5_price??p.tier5;
+  if(p.category==='Generatoren'&&u>=20&&tier20!=null)return Number(tier20);
+  if(p.category==='Generatoren'&&u>=5&&tier5!=null)return Number(tier5);
+  return Number(p.day_price||0);
+}
+function quickMoney(n){return new Intl.NumberFormat('de-CH',{style:'currency',currency:'CHF'}).format(Number(n||0))}
+function updateQuickPrice(){
+  if(!el('quickPriceBox'))return;
+  const p=products.find(x=>String(x.id)===String(el('quickProduct')?.value));
+  const u=quickRentalUnits();
+  if(!p||!u){el('quickPriceBox').textContent='Mietpreis wird nach Geräte- und Datumswahl berechnet.';return}
+  const rate=quickRateFor(p),total=rate*u;
+  const generatorNote=p.category==='Generatoren'?` · Tarif ${quickMoney(rate)}/Tag`:'';
+  el('quickPriceBox').innerHTML=`Voraussichtlicher Mietpreis: <strong>${quickMoney(total)}</strong><span>${u===0.5?'½ Tag':`${u} Tag(e)`}${generatorNote}</span>`;
+}
+function initQuickRental(){
+  if(!el('quickRentalForm'))return;
+  const t=today();
+  el('quickFrom').min=t;el('quickTo').min=t;el('quickFrom').value=t;el('quickTo').value=t;
+  const sync=()=>{
+    const half=el('quickMode').value.startsWith('half_');
+    el('quickTo').disabled=half;
+    if(half)el('quickTo').value=el('quickFrom').value;
+    else if(el('quickTo').value<el('quickFrom').value)el('quickTo').value=el('quickFrom').value;
+    el('quickTo').min=el('quickFrom').value;
+    updateQuickPrice();
+  };
+  el('quickFrom').addEventListener('change',sync);
+  el('quickTo').addEventListener('change',updateQuickPrice);
+  el('quickMode').addEventListener('change',sync);
+  el('quickProduct').addEventListener('change',updateQuickPrice);
+  sync();
+}
+async function createQuickRental(ev){
+  ev.preventDefault();
+  if(isDemo)return show('Die Schnellerfassung benötigt die Live-Datenbank.',true);
+  const args={
+    p_product_id:el('quickProduct').value,
+    p_from:el('quickFrom').value,
+    p_to:el('quickTo').value,
+    p_mode:el('quickMode').value,
+    p_name:el('quickName').value.trim(),
+    p_company:el('quickCompany').value.trim()||null,
+    p_email:el('quickEmail').value.trim()||null,
+    p_phone:el('quickPhone').value.trim(),
+    p_address:el('quickAddress').value.trim()||null,
+    p_note:el('quickNote').value.trim()||null,
+    p_long_term:el('quickLongTerm').checked,
+    p_status:el('quickStatus').value
+  };
+  if(!args.p_product_id||!args.p_from||!args.p_to||args.p_to<args.p_from)return show('Bitte einen gültigen Mietzeitraum wählen.',true);
+  if(!args.p_name||!args.p_phone)return show('Kunde/Name und Telefonnummer sind erforderlich.',true);
+  try{
+    const {data,error}=await db.rpc('admin_create_rental',args);
+    if(error)throw error;
+    if(!data)throw new Error('Für den gewählten Zeitraum ist kein freies Exemplar verfügbar.');
+    const status=args.p_status==='confirmed'?'bestätigte Vermietung':'Anfrage';
+    el('quickName').value='';el('quickCompany').value='';el('quickEmail').value='';el('quickPhone').value='';el('quickAddress').value='';el('quickNote').value='';el('quickLongTerm').checked=false;
+    show(`Schnellerfassung gespeichert (${status}).${args.p_email?' Kunden-E-Mail wurde bewusst nicht automatisch versendet.':' Keine E-Mail-Adresse hinterlegt.'}`,false,true);
+    await loadReservations();
+  }catch(e){show(e.message||'Vermietung konnte nicht erfasst werden.',true)}
+}
+
 async function logout(){if(!isDemo)await db.auth.signOut();el('adminApp').classList.add('hidden');el('loginPanel').classList.remove('hidden')}
-el('loginBtn').addEventListener('click',login);el('refreshBtn').addEventListener('click',loadAll);el('logoutBtn').addEventListener('click',logout);el('statusFilter').addEventListener('change',render);el('reservationSearch')?.addEventListener('input',render);el('blockBtn').addEventListener('click',createBlock);initBlockDates();
+el('loginBtn').addEventListener('click',login);el('refreshBtn').addEventListener('click',loadAll);el('logoutBtn').addEventListener('click',logout);el('statusFilter').addEventListener('change',render);el('reservationSearch')?.addEventListener('input',render);el('blockBtn').addEventListener('click',createBlock);el('quickRentalForm')?.addEventListener('submit',createQuickRental);initBlockDates();initQuickRental();
 (async()=>{if(isDemo){el('adminEmail').placeholder='Demo: keine Anmeldung nötig';el('adminPassword').placeholder='Demo: keine Anmeldung nötig';return}const {data}=await db.auth.getSession();if(data.session)showAdmin()})();
 
 
