@@ -67,3 +67,6 @@ dialog{border:0;border-radius:8px;width:min(720px,calc(100% - 28px));padding:0;b
 .customer-cal-half:last-child{border-bottom:0}.customer-cal-half strong{font-size:12px}.customer-cal-half small{font-size:10px}.customer-cal-half:not(:disabled):hover{outline:2px solid var(--red);outline-offset:-2px}.customer-cal-half:disabled{cursor:not-allowed;opacity:.9}
 .customer-calendar-loading{padding:30px;text-align:center;color:var(--muted)}
 @media(max-width:760px){.customer-calendar{grid-template-columns:repeat(4,minmax(92px,1fr))}}@media(max-width:480px){.customer-calendar{grid-template-columns:repeat(2,minmax(110px,1fr))}.customer-unavailable-help{align-items:stretch;flex-direction:column}.calendar-btn{width:100%}}
+
+/* Version 5.7: Bild-Upload im Adminbereich */
+.product-image-preview{margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:6px;background:#f7f7f7}.product-image-preview img{display:block;width:min(280px,100%);height:170px;object-fit:contain;background:#fff;border-radius:5px}.product-image-preview .checkline{margin:9px 0 0}dialog{max-height:calc(100dvh - 20px);overflow:auto}
