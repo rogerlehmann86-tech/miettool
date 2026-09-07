@@ -60,7 +60,7 @@ begin
  set local role authenticated;
  if not public.rental_is_admin() then raise exception 'Existing admin denied';end if;
  select count(*) into n from public.rental_email_templates;
- if n<>4 then raise exception 'Admin templates unavailable';end if;
+ if n<>5 then raise exception 'Admin templates unavailable';end if;
  update public.rental_email_templates set subject='Test {{geraet}}' where key='confirmed';
  get diagnostics n=row_count;
  if n<>1 then raise exception 'Template save failed';end if;

@@ -1,16 +1,18 @@
 export const templateLabels = {
+  direct_company: 'Direkterfassung an Standort / Untervermieter',
   request_company: 'Neue Anfrage an den Standort',
   request_customer: 'Eingangsbestätigung an den Kunden',
   confirmed: 'Reservationsbestätigung an den Kunden',
   cancelled: 'Absage / Stornierung an den Kunden'
 };
 export const defaultTemplates = {
+  direct_company: {subject:'Direkterfassung: {{geraet}} · {{status}}',body:'Eine Vermietung wurde durch Lehmann Gerätetechnik direkt erfasst.\n\nStatus: {{status}}\nBitte berücksichtigen Sie diesen Zeitraum bei der Geräteplanung.\n\nZugang: {{admin_link}}'},
   request_company: {subject:'Neue Mietanfrage: {{geraet}} · {{abholung}}',body:'Eine neue Mietanfrage ist eingegangen.\n\nBitte prüfen Sie die Anfrage im Adminbereich:\n{{admin_link}}'},
   request_customer: {subject:'Ihre Mietanfrage – {{geraet}}',body:'Guten Tag {{name}}\n\nBesten Dank für Ihre Mietanfrage bei Lehmann Gerätetechnik GmbH.\n\nFreundliche Grüsse\nLehmann Gerätetechnik GmbH\n{{kontakt_email}}'},
   confirmed: {subject:'Mietreservation bestätigt – {{geraet}}',body:'Guten Tag {{name}}\n\nIhre Mietreservation wurde von uns bestätigt.\nBei Fragen oder Änderungen erreichen Sie uns unter {{kontakt_email}}.\n\nFreundliche Grüsse\nLehmann Gerätetechnik GmbH'},
   cancelled: {subject:'Mietanfrage / Reservation – {{geraet}}',body:'Guten Tag {{name}}\n\nIhre Mietanfrage bzw. Reservation wurde abgelehnt bzw. storniert.\nFalls Sie einen anderen Zeitraum oder ein alternatives Gerät wünschen, melden Sie sich gerne unter {{kontakt_email}}.\n\nFreundliche Grüsse\nLehmann Gerätetechnik GmbH'}
 };
-export const placeholders = ['name','geraet','zeitraum','preis','abholung','rueckgabe','abholstandort','rueckgabestandort','kontakt_email','admin_link'];
+export const placeholders = ['status','name','geraet','zeitraum','preis','abholung','rueckgabe','abholstandort','rueckgabestandort','kontakt_email','admin_link'];
 export function validateTemplate(t) {
   if(!t.subject?.trim() || !t.body?.trim()) throw new Error('Betreff und Text dürfen nicht leer sein.');
   if(t.subject.length>200 || t.body.length>12000) throw new Error('Betreff maximal 200 Zeichen, Text maximal 12’000 Zeichen.');
@@ -47,11 +49,11 @@ export function routeEmails(locations,fallback) {
 export function buildEmail(key,template,row,product,locations,companyEmail,websiteUrl) {
   const s=rentalSummary(row,product),route=routeEmails(locations,companyEmail);
   const price=new Intl.NumberFormat('de-CH',{style:'currency',currency:'CHF'}).format(s.total);
-  const values={name:row.name,geraet:row.product_name,zeitraum:s.period,preis:price,abholung:s.from,rueckgabe:s.to,abholstandort:locationText(locations?.pickup),rueckgabestandort:locationText(locations?.return),kontakt_email:route.replyTo,admin_link:websiteUrl.replace(/\/$/,'')+'/admin.html'};
+  const values={status:({pending:'Anfrage – noch nicht bestätigt',confirmed:'Bestätigte Vermietung',cancelled:'Storniert'})[row.status]||row.status||'Anfrage',name:row.name,geraet:row.product_name,zeitraum:s.period,preis:price,abholung:s.from,rueckgabe:s.to,abholstandort:locationText(locations?.pickup),rueckgabestandort:locationText(locations?.return),kontakt_email:route.replyTo,admin_link:websiteUrl.replace(/\/$/,'')+'/admin.html'};
   const rendered=renderTemplate(template||defaultTemplates[key],values);
   let details=`Gerät: ${row.product_name}\nZeitraum: ${s.period}\nVoraussichtlicher Mietpreis: ${price}\n\nAbholung:\n${values.abholstandort}\n\nRückgabe:\n${values.rueckgabestandort}`;
   if(row.long_term)details+='\n\nLangzeitmiete: Spezielle Konditionen angefragt.';
-  if(key==='request_company') details+=`\n\nKunde: ${row.name}\nFirma: ${row.company||'–'}\nAdresse: ${row.address||'–'}\nE-Mail: ${row.email}\nTelefon: ${row.phone||'–'}\nBemerkung: ${row.note||'–'}\n\nAnfrage-ID: ${row.id}`;
+  if(key==='request_company'||key==='direct_company') details+=`\n\nKunde: ${row.name}\nFirma: ${row.company||'–'}\nAdresse: ${row.address||'–'}\nE-Mail: ${row.email||'Keine Kunden-E-Mail hinterlegt'}\nTelefon: ${row.phone||'–'}\nBemerkung: ${row.note||'–'}\n\nAnfrage-ID: ${row.id}`;
   if(key==='request_customer')details+='\n\nWichtig: Dies ist eine Eingangsbestätigung. Die Reservation wird erst nach unserer ausdrücklichen Bestätigung verbindlich.';
   const text=rendered.text+'\n\n'+details;
   return {subject:rendered.subject,text,html:`<div style="font-family:Arial,sans-serif;line-height:1.6;color:#171717;max-width:640px">${escapeHtml(text).replace(/\n/g,'<br>')}</div>`};
