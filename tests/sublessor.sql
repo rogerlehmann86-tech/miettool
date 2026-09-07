@@ -1,7 +1,7 @@
 -- All users, assignments, rentals and blocks are transaction-local test fixtures.
 begin;
 do $$
-declare p uuid;q uuid;u1 uuid:=gen_random_uuid();u2 uuid:=gen_random_uuid();a uuid;b uuid;r uuid;mine uuid;theirs uuid;n integer;admin_id uuid;
+declare pending_id uuid;foreign_id uuid;p uuid;q uuid;u1 uuid:=gen_random_uuid();u2 uuid:=gen_random_uuid();a uuid;b uuid;r uuid;mine uuid;theirs uuid;n integer;admin_id uuid;
 begin
  select id into admin_id from auth.users where lower(email)='info@lehmann-gt.ch';
  insert into auth.users(id,email,email_confirmed_at,is_anonymous) values(u1,'fixture-'||u1||'@example.com',now(),false),(u2,'fixture-'||u2||'@example.com',now(),false);
@@ -45,15 +45,23 @@ begin
  if r is null then raise exception 'Admin cannot rent assigned device';end if;
  select count(*) into n from public.rental_direct_notifications where reservation_id=r and sent_at is null;if n<>1 then raise exception 'Direct notification not queued without customer email';end if;
  select count(*) into n from public.admin_reservations where id=mine;if n<>1 then raise exception 'Admin cannot see partner block';end if;
+ pending_id:=public.admin_create_rental_v3(p,'2091-02-01','2091-02-02','am','pm','Scoped customer',null,'fixture@example.com','000',null,null,false,'pending',null,null);
+ foreign_id:=public.admin_create_rental_v3(q,'2091-02-01','2091-02-02','am','pm','Foreign customer',null,'fixture@example.com','000',null,null,false,'pending',null,null);
+
  reset role;
  perform set_config('request.jwt.claims',json_build_object('role','authenticated','sub',u1)::text,true);
  set local role authenticated;
+
+ if not exists(select 1 from jsonb_array_elements(public.partner_reservations()) x where x->>'id'=pending_id::text) then raise exception 'Assigned request missing';end if;
+ if exists(select 1 from jsonb_array_elements(public.partner_reservations()) x where x->>'id'=foreign_id::text or x ?| array['name','email','phone','address','company','note']) then raise exception 'Customer data exposed';end if;
  if not public.partner_remove_block(mine) then raise exception 'Own block removal failed';end if;
  mine:=public.partner_create_block(p,'2091-01-06','2091-01-06','am','pm','Privat');
  reset role;
  delete from public.rental_partner_devices where partner_id=a;
  set local role authenticated;
  select count(*) into n from public.partner_inventory();if n<>0 then raise exception 'Revoked device remains visible';end if;
+ if jsonb_array_length(public.partner_reservations())<>0 then raise exception 'Revoked customer access';end if;
+
  begin perform public.partner_remove_block(mine);raise exception 'UNEXPECTED revoked device access';exception when raise_exception then if SQLERRM like 'UNEXPECTED%' then raise;end if;end;
  reset role;
  update public.rental_partners set active=false where id=a;

@@ -5,7 +5,7 @@ async function loadPartnerAdmin(){
  rentalPartners=p.data||[];partnerAssignments=d.data||[];directNotifications=n.data||[];
  el('partnerAdminList').innerHTML=rentalPartners.map(p=>`<article class="location-card"><div><strong>${esc(p.company)}</strong> ${p.active?'':'(inaktiv)'}<p>Login: ${esc(p.email)}<br>Benachrichtigungen: ${esc(p.notification_email)}<br>${partnerAssignments.filter(d=>d.partner_id===p.id).length} Geräte · ${p.user_id?'Zugang vorhanden':'Zugang noch nicht angelegt'}</p></div><button class="btn" type="button" data-edit-partner="${p.id}">Bearbeiten</button></article>`).join('')||'<p>Noch keine Untervermieter erfasst.</p>';
  el('partnerAdminList').querySelectorAll('[data-edit-partner]').forEach(b=>b.addEventListener('click',()=>editPartner(b.dataset.editPartner)));
- render();
+ updateFilterLabels();render();
 }
 function editPartner(id){
  const p=rentalPartners.find(x=>x.id===id);el('partnerAdminForm').reset();el('editPartnerId').value=p?.id||'';

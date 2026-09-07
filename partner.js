@@ -12,7 +12,7 @@ async function loadPartner(){
   if(partnerProducts.some(p=>p.id===selected))el('partnerProduct').value=selected;
   el('partnerDevices').innerHTML=partnerProducts.map(p=>`<article class="product-admin-card"><div><h3>${esc(p.name)}</h3><p>${esc(p.category)} · ${Number(p.quantity)} Exemplar(e)</p></div></article>`).join('')||'<p>Noch keine aktiven Geräte zugeteilt. Bitte Lehmann Gerätetechnik kontaktieren.</p>';
   el('partnerBlockForm').querySelector('button').disabled=!partnerProducts.length;
-  await loadCalendar();await loadBlocks();
+  await loadCalendar();await loadBlocks();await loadRequests();
  }catch(e){show(e.message,true);}
 }
 async function loadCalendar(){
@@ -46,3 +46,11 @@ el('partnerLogout').addEventListener('click',async()=>{await db.auth.signOut();l
 ['partnerFrom','partnerTo','partnerCalendarFrom'].forEach(id=>{el(id).value=today();});
 el('partnerFrom').addEventListener('change',()=>{el('partnerTo').min=el('partnerFrom').value;if(el('partnerTo').value<el('partnerFrom').value)el('partnerTo').value=el('partnerFrom').value;});
 (async()=>{try{const {data}=await db.auth.getSession();if(!data.session){location.replace('admin.html');return;}const role=await rpc('rental_access_role');if(role==='admin'){location.replace('admin.html');return;}if(role!=='sublessor')throw new Error('Für dieses Konto ist kein Untervermieter-Zugang freigegeben.');el('partnerApp').classList.remove('hidden');await loadPartner();show('Angemeldet als Untervermieter.');}catch(e){show(e.message,true);}})();
+
+async function loadRequests(){
+ const rows=await rpc('partner_reservations');
+ const date=v=>String(v||'').split('-').reverse().join('.');
+ const card=r=>`<article class="reservation ${esc(r.status)}"><div class="reservation-head"><div><h3>${esc(r.product_name)}</h3><p>${date(r.from_date)} ${r.start_half==='pm'?'Nachmittag':'Vormittag'} bis ${date(r.to_date)} ${r.end_half==='am'?'Mittag':'Abend'}</p></div><span class="status-pill">${({pending:'Anfrage',confirmed:'Bestätigt',cancelled:'Abgelehnt / storniert'})[r.status]||esc(r.status)}</span></div><p class="small muted">Anfrage-Nr. ${esc(r.id)}</p></article>`;
+ el('partnerRequests').innerHTML=rows.filter(r=>r.status==='pending').map(card).join('')||'<p>Keine offenen Anfragen.</p>';
+ el('partnerCompleted').innerHTML=rows.filter(r=>r.status!=='pending').map(card).join('')||'<p>Noch keine bearbeiteten Reservationen.</p>';
+}

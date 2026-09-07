@@ -27,3 +27,13 @@ test('template validation and placeholders',()=>{
  assert.throws(()=>validateTemplate({subject:'Hi\nX',body:'Text'}));
  assert.equal(renderTemplate({subject:'{{name}}',body:'{{name}}'},{name:'Test\r\nCc: bad'}).subject,'Test  Cc: bad');
 });
+
+test('signature follows booking details, identical locations are combined',()=>{
+ const location={name:'Partnerhof',address:'Dorfstrasse 1'};
+ const mail=buildEmail('request_customer',null,{id:'1',name:'Anna',product_name:'Gerät',from_date:'2026-09-07',to_date:'2026-09-07',status:'pending'},{day_price:250},{pickup:location,return:location},'info@example.com','https://example.com',{company:'Partnerfirma',email:'partner@example.com',partner:true});
+ assert.ok(mail.text.endsWith('Freundliche Grüsse\nPartnerfirma'));
+ assert.match(mail.text,/Abholung und Rückgabe:/);
+ assert.equal(mail.text.split('Dorfstrasse 1').length-1,1);
+ assert.ok(mail.text.indexOf('Gerät:')<mail.text.indexOf('Freundliche Grüsse'));
+ assert.doesNotMatch(mail.text,/Lehmann|partner@example.com/);
+});

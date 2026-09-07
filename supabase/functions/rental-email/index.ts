@@ -35,19 +35,22 @@ Deno.serve(async req=>{
       admin.from('products').select('day_price,tier5_price,tier20_price,category').eq('id',row.product_id).single(),
       admin.from('rental_email_templates').select('key,subject,body'),
       admin.from('reservation_locations').select('pickup,return').eq('reservation_id',reservation_id).maybeSingle(),
-      admin.from('rental_partner_devices').select('rental_partners!inner(notification_email,active)').eq('product_id',row.product_id)
+      admin.from('rental_partner_devices').select('rental_partners!inner(company,notification_email,active)').eq('product_id',row.product_id)
     ]);
     if(p.error||t.error||l.error||partners.error)throw p.error||t.error||l.error||partners.error;
     const templates=Object.fromEntries((t.data||[]).map(v=>[v.key,v]));
     const route=routeEmails(l.data,companyEmail);
-    const partnerEmails=(partners.data||[]).flatMap(d=>{const p=d.rental_partners as unknown as {active:boolean;notification_email:string};return p?.active?[p.notification_email.toLowerCase()]:[];});
-    const internalRecipients=[...new Set([...route.recipients,...partnerEmails])];
+    const activePartners=(partners.data||[]).map(d=>d.rental_partners as unknown as {active:boolean;company:string;notification_email:string}).filter(p=>p?.active).sort((a,b)=>a.notification_email.localeCompare(b.notification_email));
+    const partnerEmails=activePartners.map(p=>p.notification_email.toLowerCase());
+    const internalRecipients=[...new Set(partnerEmails.length?partnerEmails:route.recipients)];
+    const owner=activePartners.find(p=>p.notification_email.toLowerCase()===route.replyTo.toLowerCase())||activePartners[0];
+    const sender={company:owner?.company||'Lehmann Gerätetechnik GmbH',email:owner?.notification_email||route.replyTo,partner:!!owner};
     const jobs=event==='direct'?internalRecipients.map(to=>({key:'direct_company',to,replyTo:companyEmail})):event==='request' ? [
       ...internalRecipients.map(to=>({key:'request_company',to,replyTo:row.email})),
-      {key:'request_customer',to:row.email,replyTo:route.replyTo}
-    ] : [{key:event,to:row.email,replyTo:route.replyTo}];
+      {key:'request_customer',to:row.email,replyTo:sender.email}
+    ] : [{key:event,to:row.email,replyTo:sender.email}];
     for(const job of jobs) {
-      const payload={from,to:[job.to],reply_to:job.replyTo,...buildEmail(job.key,templates[job.key],row,p.data,l.data,companyEmail,website)};
+      const payload={from,to:[job.to],reply_to:job.replyTo,...buildEmail(job.key,templates[job.key],row,p.data,l.data,companyEmail,website,sender)};
       const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(job.to.toLowerCase()));
       const recipientKey=Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
       const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${resendKey}`,'Content-Type':'application/json','Idempotency-Key':`${reservation_id}/${event}/${job.key}/${recipientKey}`},body:JSON.stringify(payload)});
