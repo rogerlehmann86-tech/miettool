@@ -54,3 +54,11 @@ test('partner requests exclude unrelated locations and link to partner inbox',as
  assert.equal(sent[1].payload.reply_to,'external@example.com');
  assert.ok(sent[1].payload.text.endsWith('Freundliche Grüsse\nPartnerfirma'));
 });
+
+test('assigned partner may send decisions; unassigned partner and direct events are denied',async()=>{
+ sent.length=0;isAdmin=false;isPartner=true;row.status='confirmed';
+ assert.equal((await handler(req('confirmed'))).status,200);assert.equal(sent.length,1);
+ sent.length=0;isPartner=false;assert.equal((await handler(req('confirmed'))).status,403);assert.equal(sent.length,0);
+ isPartner=true;assert.equal((await handler(req('direct'))).status,403);assert.equal(sent.length,0);
+ row.status='cancelled';assert.equal((await handler(req('cancelled'))).status,200);assert.equal(sent.length,1);
+});

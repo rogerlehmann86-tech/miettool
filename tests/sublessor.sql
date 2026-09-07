@@ -53,14 +53,25 @@ begin
  set local role authenticated;
 
  if not exists(select 1 from jsonb_array_elements(public.partner_reservations()) x where x->>'id'=pending_id::text) then raise exception 'Assigned request missing';end if;
- if exists(select 1 from jsonb_array_elements(public.partner_reservations()) x where x->>'id'=foreign_id::text or x ?| array['name','email','phone','address','company','note']) then raise exception 'Customer data exposed';end if;
+ if exists(select 1 from jsonb_array_elements(public.partner_reservations()) x where x->>'id'=foreign_id::text) then raise exception 'Customer data exposed';end if;
+ if not public.partner_can_manage_reservation(pending_id) or public.partner_can_manage_reservation(foreign_id) or public.partner_can_manage_reservation(mine) then raise exception 'Incorrect request permission';end if;
+ if not exists(select 1 from jsonb_array_elements(public.partner_reservations()) x where x->>'id'=pending_id::text and x->>'name'='Scoped customer') then raise exception 'Assigned customer missing';end if;
+ begin perform public.partner_set_reservation_status(foreign_id,'confirmed');raise exception 'UNEXPECTED foreign confirmation';exception when raise_exception then if SQLERRM like 'UNEXPECTED%' then raise;end if;end;
+ perform public.partner_set_reservation_status(pending_id,'cancelled');
+ begin perform public.partner_set_reservation_status(pending_id,'confirmed');raise exception 'UNEXPECTED reopening cancelled reservation';exception when raise_exception then if SQLERRM like 'UNEXPECTED%' then raise;end if;end;
+ reset role;
+ insert into public.reservations(unit_id,from_date,to_date,start_half,end_half,rental_mode,status)
+ select u.id,'2091-03-01','2091-03-01','am','pm','full','pending' from public.units u where u.product_id=p limit 1 returning id into pending_id;
+ set local role authenticated;
+ perform public.partner_set_reservation_status(pending_id,'confirmed');
+ if not exists(select 1 from jsonb_array_elements(public.partner_reservations()) x where x->>'id'=pending_id::text and x->>'status'='confirmed') then raise exception 'Confirmation not saved';end if;
  if not public.partner_remove_block(mine) then raise exception 'Own block removal failed';end if;
  mine:=public.partner_create_block(p,'2091-01-06','2091-01-06','am','pm','Privat');
  reset role;
  delete from public.rental_partner_devices where partner_id=a;
  set local role authenticated;
  select count(*) into n from public.partner_inventory();if n<>0 then raise exception 'Revoked device remains visible';end if;
- if jsonb_array_length(public.partner_reservations())<>0 then raise exception 'Revoked customer access';end if;
+ if public.partner_can_manage_reservation(pending_id) or jsonb_array_length(public.partner_reservations())<>0 then raise exception 'Revoked customer access';end if;
 
  begin perform public.partner_remove_block(mine);raise exception 'UNEXPECTED revoked device access';exception when raise_exception then if SQLERRM like 'UNEXPECTED%' then raise;end if;end;
  reset role;

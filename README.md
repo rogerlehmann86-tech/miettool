@@ -38,7 +38,7 @@ node --check admin-settings.js
 
 Im Adminbereich unter **Standorte & E-Mailtexte → Untervermieter** eine Firma erfassen, Login-E-Mail und Benachrichtigungsadresse angeben und Geräte zuweisen. Nach dem Speichern kann im Bearbeitungsdialog ein Zugang mit Startpasswort angelegt werden. Ein bereits vorhandenes Supabase-Konto mit derselben E-Mail wird beim Speichern zugeordnet und nicht zurückgesetzt. Für neue Konten richtet der Admin einen bestätigten Zugang ein und übergibt das Startpasswort separat; es wird keine Einladungs- oder Passwort-E-Mail versendet. Nach der Anmeldung kann der Untervermieter das Passwort ändern.
 
-Die Anmeldung läuft über `admin.html`; Untervermieter werden nach serverseitiger Rollenprüfung nach `partner.html` weitergeleitet. Dort sehen sie ihre aktiven Geräte, Anfragen und Reservationen zu diesen Geräten (ohne Kundendaten), freie Halbtagkapazitäten und eigene Nutzungssperren. Eine Sperre betrifft jeweils ein Exemplar. Sie können nur eigene Sperren zu weiterhin zugeteilten Geräten aufheben. Keine Bestätigung/Stornierung von Kundenreservationen, Preisbearbeitung, Geräteverwaltung, Bild-Uploads, E-Mailtexte oder Kundendatenzugriffe. Der öffentliche Mietkatalog bleibt wie bisher öffentlich.
+Die Anmeldung läuft über `admin.html`; Untervermieter werden nach serverseitiger Rollenprüfung nach `partner.html` weitergeleitet. Dort sehen sie ihre aktiven Geräte, Anfragen und Reservationen zu diesen Geräten, freie Halbtagkapazitäten und eigene Nutzungssperren. Eine Sperre betrifft jeweils ein Exemplar. Sie können nur eigene Sperren zu weiterhin zugeteilten Geräten aufheben. Seit v5.11 können Partner Kundenkontaktdaten zu ihren zugewiesenen Geräten sehen und offene Anfragen bestätigen oder ablehnen. Preisbearbeitung, Geräteverwaltung, Bild-Uploads und E-Mailtexte bleiben dem Admin vorbehalten. Der öffentliche Mietkatalog bleibt wie bisher öffentlich.
 
 Lehmann kann zugewiesene Geräte weiter vermieten, solange keine Nutzungssperre oder andere Reservation entgegensteht. Auch direkt bestätigte Mieten ohne Kunden-E-Mail informieren den Untervermieter. Bei aktiver Partnerzuordnung erhalten ausschliesslich die zugewiesenen Partner die internen Anfrage- und Direkterfassungsmails. Ohne Partnerzuordnung gelten die Standortadressen. Doppelte Adressen werden zusammengefasst. Die Vorlage **Direkterfassung an Standort / Untervermieter** kann separat geändert werden. Der Platzhalter `{{status}}` unterscheidet Anfrage und bestätigte Vermietung.
 
@@ -59,8 +59,17 @@ node --test tests/mail-content.test.mjs tests/edge-function.test.mjs tests/partn
 
 ## v5.10 – Partner-Anfragen und E-Maildarstellung
 
-`db/upgrade_v5_10.sql` ergänzt eine lesende Partnerübersicht mit Gerät, Zeitraum, Status und Anfrage-ID. Die Zuordnung wird serverseitig geprüft; Kundendaten und Schreibrechte bleiben geschützt. Offene Partneranfragen erscheinen nicht im Lehmann-Filter «Anfragen». Unter «Alle» sowie im gemeinsamen Belegungskalender bleiben sie zur Verwaltung sichtbar. Bestätigung/Ablehnung erfolgt weiterhin durch Lehmann, bis zusätzliche Partnerrechte ausdrücklich freigegeben sind.
+`db/upgrade_v5_10.sql` ergänzt eine lesende Partnerübersicht mit Gerät, Zeitraum, Status und Anfrage-ID. Die Zuordnung wird serverseitig geprüft; Kundendaten und Schreibrechte bleiben geschützt. Offene Partneranfragen erscheinen nicht im Lehmann-Filter «Anfragen». Unter «Alle» sowie im gemeinsamen Belegungskalender bleiben sie zur Verwaltung sichtbar. Seit v5.11 sind die zusätzlichen Partnerrechte ausdrücklich freigegeben.
 
 Kunden-E-Mails verwenden den zuständigen Partner als Firmennamen und Antwortadresse, behalten jedoch den verifizierten technischen Absender. Die Grusszeile steht nach den Mietdetails; identische Abhol-/Rückgabeadressen werden zusammengefasst. Standardtexte werden nur aktualisiert, wenn sie noch unverändert sind. Eigene Texte bleiben erhalten. `{{vermieter}}` ist im Texteditor verfügbar. Partner-Mails verlinken direkt auf `partner.html`.
 
 Validierung: 14 lokale Node-Tests sowie Datenbanktests mit zurückgerollten Testdaten; keine echten Testmails. Die Datenbanktests prüfen zusätzlich den lesenden Anfragezugriff ohne Kundenfelder, fremde Geräte und den sofortigen Entzug nach Aufheben der Zuteilung.
+
+
+## v5.11 – Freigegebene Partnerbearbeitung
+
+`db/upgrade_v5_11.sql` erweitert die geprüfte Partnerübersicht um Kundenkontakt, Bemerkung und Standorte. Partner dürfen nur offene Anfragen ihrer aktuell zugewiesenen Geräte bestätigen oder ablehnen. Bereits bearbeitete Reservationen können darüber nicht wieder geöffnet werden. Rohdatenzugriff und allgemeine Adminrechte bleiben gesperrt.
+
+Die E-Mailfunktion prüft für Partner die Berechtigung zur konkreten Reservation; Direkterfassungsmails bleiben adminpflichtig. Nach einer Entscheidung wird der Kunde informiert. Scheitert der Versand, bleibt der Status gespeichert und unter «Bearbeitete Reservationen» erscheint eine Möglichkeit zum erneuten Versand. Ohne Kunden-E-Mail wird nur der Status gespeichert.
+
+Prüfung: 15 Node-Tests und SQL-Tests mit zurückgerollten Testdaten, einschliesslich fremder Kunden, Bestätigung/Ablehnung und Rechteentzug. Es wurden keine echten Testmails versendet.

@@ -20,7 +20,12 @@ Deno.serve(async req=>{
       const {data,error}=await auth.auth.getUser();
       if(error||!data.user)return reply({error:'Nicht autorisiert.'},401);
       const allowed=await auth.rpc('rental_is_admin');
-      if(allowed.error||!allowed.data)return reply({error:'Keine Adminberechtigung.'},403);
+      if(allowed.error)return reply({error:'Berechtigung konnte nicht geprüft werden.'},403);
+      if(!allowed.data){
+        if(event==='direct')return reply({error:'Keine Adminberechtigung.'},403);
+        const partner=await auth.rpc('partner_can_manage_reservation',{p_id:reservation_id});
+        if(partner.error||!partner.data)return reply({error:'Keine Berechtigung für diese Reservation.'},403);
+      }
     }
     const {data:row,error:rowError}=await admin.from('admin_reservations').select('*').eq('id',reservation_id).single();
     if(rowError||!row)throw new Error('Reservation nicht gefunden.');

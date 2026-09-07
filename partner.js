@@ -47,10 +47,21 @@ el('partnerLogout').addEventListener('click',async()=>{await db.auth.signOut();l
 el('partnerFrom').addEventListener('change',()=>{el('partnerTo').min=el('partnerFrom').value;if(el('partnerTo').value<el('partnerFrom').value)el('partnerTo').value=el('partnerFrom').value;});
 (async()=>{try{const {data}=await db.auth.getSession();if(!data.session){location.replace('admin.html');return;}const role=await rpc('rental_access_role');if(role==='admin'){location.replace('admin.html');return;}if(role!=='sublessor')throw new Error('Für dieses Konto ist kein Untervermieter-Zugang freigegeben.');el('partnerApp').classList.remove('hidden');await loadPartner();show('Angemeldet als Untervermieter.');}catch(e){show(e.message,true);}})();
 
+
 async function loadRequests(){
  const rows=await rpc('partner_reservations');
  const date=v=>String(v||'').split('-').reverse().join('.');
- const card=r=>`<article class="reservation ${esc(r.status)}"><div class="reservation-head"><div><h3>${esc(r.product_name)}</h3><p>${date(r.from_date)} ${r.start_half==='pm'?'Nachmittag':'Vormittag'} bis ${date(r.to_date)} ${r.end_half==='am'?'Mittag':'Abend'}</p></div><span class="status-pill">${({pending:'Anfrage',confirmed:'Bestätigt',cancelled:'Abgelehnt / storniert'})[r.status]||esc(r.status)}</span></div><p class="small muted">Anfrage-Nr. ${esc(r.id)}</p></article>`;
+ const locationText=v=>v?[v.name,v.address,v.instructions].filter(Boolean).join(' · '):'Nach Vereinbarung';
+ const card=r=>`<article class="reservation ${esc(r.status)}"><div class="reservation-head"><div><h3>${esc(r.product_name)}</h3><p>${date(r.from_date)} ${r.start_half==='pm'?'Nachmittag':'Vormittag'} bis ${date(r.to_date)} ${r.end_half==='am'?'Mittag':'Abend'}</p></div><span class="status-pill">${({pending:'Anfrage',confirmed:'Bestätigt',cancelled:'Abgelehnt / storniert'})[r.status]||esc(r.status)}</span></div><div class="reservation-details"><div><strong>Kunde</strong><p>${esc(r.name)}<br>${esc(r.company||'')}<br>${esc(r.address||'')}</p></div><div><strong>Kontakt</strong><p>${esc(r.email||'Keine E-Mail hinterlegt')}<br>${esc(r.phone||'')}</p></div><div><strong>Bemerkung</strong><p>${esc(r.note||'–')}</p></div></div><p>Abholung: ${esc(locationText(r.pickup))}<br>Rückgabe: ${esc(locationText(r.return))}</p><div class="reservation-actions">${r.status==='pending'?`<button class="btn success" data-decision="confirmed" data-id="${r.id}">Bestätigen</button><button class="btn danger" data-decision="cancelled" data-id="${r.id}">Ablehnen</button>`:r.email&&!r.email_sent?`<button class="btn" data-mail="${esc(r.status)}" data-id="${r.id}">Kunden-E-Mail senden / erneut versuchen</button>`:`<span class="small muted">${r.email?'Kunde per E-Mail informiert.':'Keine Kunden-E-Mail hinterlegt.'}</span>`}</div></article>`;
  el('partnerRequests').innerHTML=rows.filter(r=>r.status==='pending').map(card).join('')||'<p>Keine offenen Anfragen.</p>';
  el('partnerCompleted').innerHTML=rows.filter(r=>r.status!=='pending').map(card).join('')||'<p>Noch keine bearbeiteten Reservationen.</p>';
+ for(const box of [el('partnerRequests'),el('partnerCompleted')])box.querySelectorAll('[data-decision],[data-mail]').forEach(b=>b.addEventListener('click',async()=>{
+  b.disabled=true;let saved=false;
+  try{
+   const row=rows.find(r=>r.id===b.dataset.id),event=b.dataset.decision||b.dataset.mail;
+   if(b.dataset.decision){await rpc('partner_set_reservation_status',{p_id:row.id,p_status:event});saved=true;}
+   if(row.email){const result=await db.functions.invoke(cfg.emailFunctionName||'rental-email',{body:{reservation_id:row.id,event}});if(result.error||result.data?.error)throw new Error(result.data?.error||result.error.message);}
+   await loadPartner();show(row.email?'Gespeichert. Der Kunde wurde per E-Mail informiert.':'Gespeichert. Keine Kunden-E-Mail hinterlegt.');
+  }catch(e){await loadPartner();show(saved?'Status gespeichert, E-Mailversand fehlgeschlagen. Unter «Bearbeitete Reservationen» erneut versuchen.':e.message,true);}finally{b.disabled=false;}
+ }));
 }
