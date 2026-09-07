@@ -2,10 +2,10 @@
 <html lang="de">
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#111214" /><title>Mietgeräte Admin | Lehmann Gerätetechnik</title><link rel="stylesheet" href="styles.css" /></head>
 <body>
-  <header class="topbar"><div class="wrap brand-row"><div class="brand logo-brand"><img class="site-logo" src="assets/lehmann-logo.jpg" alt="Lehmann Gerätetechnik GmbH" /></div><a class="admin-link" href="index.html">Kundenseite</a></div></header>
-  <section class="hero"><div class="wrap hero-inner"><div><div class="hero-accent"></div><div class="eyebrow">Interner Bereich</div><h1>Mietgeräte – Admin</h1><p>Anfragen verwalten und Geräte für Service, Reparaturen oder interne Nutzung sperren.</p></div></div></section>
+  <header class="topbar"><div class="wrap brand-row"><div class="brand logo-brand"><img class="site-logo" src="assets/lehmann-logo.png" alt="Lehmann Gerätetechnik GmbH" /></div><a class="admin-link" href="index.html">Kundenseite</a></div></header>
+  <section class="hero"><div class="wrap hero-inner"><div><div class="hero-accent"></div><div class="eyebrow">Interner Bereich</div><h1>Mietgeräte – Verwaltung</h1><p>Anmeldung für Administratoren und Untervermieter.</p></div></div></section>
   <main class="wrap">
-    <section id="loginPanel" class="panel login-panel"><div class="field grow"><label for="adminEmail">E-Mail</label><input id="adminEmail" type="email" /></div><div class="field grow"><label for="adminPassword">Passwort</label><input id="adminPassword" type="password" /></div><button id="loginBtn" class="btn primary">Anmelden</button></section>
+    <p id="loginNotice" class="notice hidden" role="status"></p><section id="loginPanel" class="panel login-panel"><div class="field grow"><label for="adminEmail">E-Mail</label><input id="adminEmail" type="email" /></div><div class="field grow"><label for="adminPassword">Passwort</label><input id="adminPassword" type="password" /></div><button id="loginBtn" class="btn primary">Anmelden</button></section>
     <section id="adminApp" class="hidden">
       <section class="panel reservation-panel">
         <div class="section-title"><div><h2>Anfragen & Reservationen</h2><p>Neue Mietanfragen prüfen, bestätigen oder ablehnen.</p></div></div>
@@ -14,7 +14,7 @@
           <div class="field"><label for="statusFilter">Anzeige</label><select id="statusFilter"><option value="pending" selected>Anfragen</option><option value="confirmed">Bestätigte / aktuelle Mieten</option><option value="archive">Archiv</option><option value="blocked">Gesperrt / Service</option><option value="cancelled">Abgelehnt / storniert</option><option value="all">Alle</option></select></div>
           <button id="refreshBtn" class="btn">Aktualisieren</button><div class="spacer"></div><button id="logoutBtn" class="btn">Abmelden</button>
         </div>
-        <section id="adminNotice" class="notice hidden"></section><p class="admin-mail-note">E-Mail-Benachrichtigungen: <strong>info@lehmann-gt.ch</strong></p><div id="reservationList" class="reservation-list"></div>
+        <section id="adminNotice" class="notice hidden"></section><p class="admin-mail-note">Anfragen gehen an die gewählten Standorte. Ohne Standort gilt info@lehmann-gt.ch.</p><div id="reservationList" class="reservation-list"></div>
       </section>
 
 
@@ -43,7 +43,7 @@
           <div class="field"><label for="quickEndHalf">Rückgabe bis *</label><select id="quickEndHalf"><option value="pm">Abend</option><option value="am">Mittag</option></select></div>
           <div class="field"><label for="quickStatus">Status *</label><select id="quickStatus"><option value="confirmed" selected>Direkt bestätigt</option><option value="pending">Als Anfrage erfassen</option></select></div>
 
-          <div class="field grow"><label for="quickName">Kunde / Name *</label><input id="quickName" required /></div>
+          <div id="quickLocations" class="location-fields full"></div><div class="field grow"><label for="quickName">Kunde / Name *</label><input id="quickName" required /></div>
           <div class="field"><label for="quickPhone">Telefon *</label><input id="quickPhone" type="tel" required /></div>
           <div class="field grow"><label for="quickEmail">E-Mail optional</label><input id="quickEmail" type="email" placeholder="Kann leer bleiben" /></div>
           <div class="field grow"><label for="quickCompany">Firma</label><input id="quickCompany" /></div>
@@ -54,7 +54,7 @@
           <div id="quickPriceBox" class="quick-price-box">Mietpreis wird nach Geräte- und Datumswahl berechnet.</div>
           <button id="quickRentalBtn" class="btn primary" type="submit">Vermietung erfassen</button>
         </form>
-        <p class="small muted quick-hint">Bei einer Schnellerfassung wird keine interne E-Mail ausgelöst. Ist keine Kunden-E-Mail vorhanden, werden auch bei späteren Statusänderungen keine Kundenmails versendet.</p>
+        <p class="small muted quick-hint">Direkterfassungen informieren die gewählten Standorte und die dem Gerät zugewiesenen Untervermieter – auch ohne Kunden-E-Mail. Eine Kundenbestätigung wird bei der Schnellerfassung nicht automatisch versendet.</p>
       </section>
 
       <section class="panel block-panel"><h2>Gerät sperren</h2><p>Für Service, Reparatur, interne Nutzung oder andere Nichtverfügbarkeit.</p><div class="block-form">
@@ -64,6 +64,17 @@
         <div class="field grow"><label for="blockReason">Grund</label><input id="blockReason" placeholder="z. B. Service / Reparatur" /></div><button id="blockBtn" class="btn primary">Sperrzeit eintragen</button>
       </div></section>
 
+      <section class="panel settings-panel"><h2>Standorte & E-Mailtexte</h2><div id="settingsNotice" class="notice hidden" role="status"></div>
+        <h3>Untervermieter</h3><p>Zugang und Geräte je externer Firma zuweisen. Untervermieter können ausschliesslich die Verfügbarkeit ihrer Geräte prüfen und eigene Nutzungssperren setzen. Ihre E-Mailadresse erhält auch direkt erfasste Vermietungen.</p><button id="newPartnerBtn" class="btn primary" type="button">+ Untervermieter erfassen</button><div id="partnerAdminList"></div><hr><h3>Abhol- und Rückgabestandorte</h3><p>Standorte je Mietgerät pflegen. Die Anfrage geht an den Abholstandort und bei einer anderen E-Mailadresse zusätzlich an den Rückgabestandort. Der Gerätebestand gilt weiterhin gemeinsam für alle Standorte.</p>
+        <div class="admin-toolbar"><div class="field grow"><label for="locationProduct">Mietgerät</label><select id="locationProduct"></select></div><button type="button" class="btn primary" id="newLocationBtn">+ Standort hinzufügen</button></div><div id="locationList"></div>
+        <hr><h3>E-Mailvorlagen</h3><p>Betreff und Nachricht bearbeiten. Buchungsdetails, Standorte und der Hinweis auf eine unverbindliche Anfrage werden automatisch ergänzt.</p>
+        <form id="templateForm"><div class="field"><label for="templateKey">E-Mailtyp</label><select id="templateKey"></select></div>
+        <div class="field"><label for="templateSubject">Betreff</label><input id="templateSubject" required maxlength="200"></div>
+        <div class="field"><label for="templateBody">Nachricht</label><textarea id="templateBody" rows="10" required maxlength="12000"></textarea></div>
+        <p class="small muted">Verfügbare Platzhalter: <span id="templatePlaceholders"></span></p>
+        <div class="admin-toolbar"><button class="btn primary" type="submit">E-Mailvorlage speichern</button><button class="btn" type="button" id="templateReset">Standardtext einsetzen</button></div></form>
+        <details open><summary>Vorschau mit Beispieldaten – es wird keine E-Mail versendet</summary><pre id="templatePreview" class="mail-preview"></pre></details>
+      </section>
       <section class="panel product-panel"><div class="section-title"><div><h2>Mietgeräte verwalten</h2><p>Geräte, Preise, Bilder und Bestand direkt im Adminbereich pflegen.</p></div><button id="newProductBtn" class="btn primary">+ Neues Mietgerät</button></div><div id="productAdminList" class="product-admin-list"></div></section>
     </section>
   </main>
@@ -77,5 +88,13 @@
     <div class="field full"><label>Bild-URL (alternativ)</label><input id="editImageUrl" type="url" placeholder="https://..."></div><div class="field"><label>Sortierung</label><input id="editSortOrder" type="number" step="1"></div>
     <label class="checkline"><input id="editLongTerm" type="checkbox"> Langzeitmiete / spezielle Konditionen anzeigen</label><label class="checkline"><input id="editActive" type="checkbox" checked> Auf Kundenseite aktiv</label>
   </div><p class="small muted">½-Tagesmiete bleibt automatisch bei 50 % des Tagespreises. Beim Reduzieren des Bestands werden nur freie Exemplare deaktiviert; bestehende Reservationen bleiben erhalten.</p><button class="btn primary full-btn" type="submit">Mietgerät speichern</button></form></dialog>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="admin.js"></script>
+  <dialog id="partnerAdminDialog"><form id="partnerAdminForm"><button type="button" id="closePartnerAdminDialog" class="dialog-close">×</button><h2>Untervermieter verwalten</h2><input type="hidden" id="editPartnerId"><div class="form-grid"><div class="field full"><label for="editPartnerCompany">Firma / Bezeichnung</label><input id="editPartnerCompany" required maxlength="160"></div><div class="field"><label for="editPartnerEmail">Login-E-Mail</label><input id="editPartnerEmail" type="email" required></div><div class="field"><label for="editPartnerNotification">E-Mail für Benachrichtigungen</label><input id="editPartnerNotification" type="email" required></div><label class="checkline"><input id="editPartnerActive" type="checkbox" checked> Zugang aktiv</label><div class="field full"><strong>Zugewiesene Geräte</strong><div id="partnerDeviceAssignments" class="assignment-grid"></div></div></div><p>Eine deaktivierte Zuordnung entzieht den Zugriff sofort. Bestehende Nutzungssperren bleiben erhalten und können durch den Admin aufgehoben werden.</p><button class="btn primary" type="submit">Untervermieter speichern</button><p id="partnerAdminFormNotice" class="error" role="alert"></p></form><section id="partnerAccountArea" class="hidden"><hr><h3>Login anlegen</h3><p>Das Konto wird für die gespeicherte Login-E-Mail eingerichtet. Bitte das Startpasswort persönlich übergeben; es wird keine E-Mail versendet.</p><div class="field"><label for="partnerStartPassword">Startpasswort (mindestens 12 Zeichen)</label><input id="partnerStartPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password"></div><button id="createPartnerAccount" class="btn" type="button">Zugang anlegen</button></section></dialog>
+<dialog id="locationDialog"><form id="locationForm"><button class="dialog-close" type="button" id="closeLocationDialog">×</button><h2 id="locationDialogTitle">Standort</h2><input type="hidden" id="locationId"><input type="hidden" id="locationFormProduct"><div class="form-grid">
+    <div class="field full"><label for="locationName">Standortname</label><input id="locationName" required maxlength="120"></div>
+    <div class="field full"><label for="locationAddress">Adresse</label><textarea id="locationAddress" required maxlength="500" rows="2"></textarea></div>
+    <div class="field full"><label for="locationInstructions">Hinweise für Abholung / Rückgabe</label><textarea id="locationInstructions" maxlength="2000" rows="3"></textarea></div>
+    <div class="field full"><label for="locationEmail">E-Mail für Mietanfragen</label><input id="locationEmail" type="email" required maxlength="254"></div>
+    <label class="checkline"><input type="checkbox" id="locationPickup" checked> Abholung möglich</label><label class="checkline"><input type="checkbox" id="locationReturn" checked> Rückgabe möglich</label><label class="checkline"><input type="checkbox" id="locationActive" checked> Aktiv</label>
+    </div><p id="locationFormNotice" class="error" role="alert"></p><button class="btn primary full-btn" type="submit">Standort speichern</button></form></dialog>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="locations.js"></script><script src="admin-settings.js"></script><script src="admin-partners.js"></script><script src="admin.js"></script>
 </body></html>
