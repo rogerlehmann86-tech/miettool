@@ -1,3 +1,11 @@
+.pickup-info{border:1px solid #e6c594;border-left:4px solid #a96300;border-radius:6px;background:#fff8ee;font-size:14px;overflow-wrap:anywhere}
+.pickup-info summary{padding:12px;cursor:pointer;font-weight:750;color:#774600;min-height:44px}
+.pickup-info summary:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.pickup-info-body{padding:0 12px 12px;line-height:1.5}
+.pickup-info-body p{margin:8px 0}
+.pickup-place{border-top:1px solid #e6c594;padding-top:10px;margin-top:10px;white-space:pre-line}
+.request-result-dialog{max-width:520px}
+.request-result-dialog p{line-height:1.6;overflow-wrap:anywhere}
 :root{
   --red:#e60918;--red-dark:#a90e14;--black:#111214;--charcoal:#232529;--bg:#f3f3f3;--text:#17181a;--muted:#666b70;--border:#dedede;--green:#167443;--orange:#a96300;--white:#fff;--shadow:0 10px 30px rgba(0,0,0,.08)
 }
