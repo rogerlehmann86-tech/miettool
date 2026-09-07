@@ -11,7 +11,7 @@
   <header class="topbar">
     <div class="wrap brand-row">
       <div class="brand logo-brand">
-        <img class="site-logo" src="assets/lehmann-logo.jpg" alt="Lehmann Gerätetechnik GmbH" />
+        <img class="site-logo" src="assets/lehmann-logo.png" alt="Lehmann Gerätetechnik GmbH" />
       </div>
       <a class="admin-link" href="admin.html">Admin</a>
     </div>
@@ -42,7 +42,7 @@
       <button type="button" class="dialog-close" id="closeDialog" aria-label="Schliessen">×</button>
       <div class="eyebrow">Mietanfrage</div><h2 id="bookingTitle">Gerät reservieren</h2><p id="bookingPeriod" class="muted"></p>
       <div id="priceBox" class="price-box"></div><input type="hidden" id="productId" />
-      <div class="form-grid">
+      <div class="form-grid"><div id="bookingLocations" class="location-fields full"></div>
         <div class="field"><label for="name">Name *</label><input id="name" required /></div><div class="field"><label for="company">Firma</label><input id="company" /></div>
         <div class="field"><label for="email">E-Mail *</label><input id="email" type="email" required /></div><div class="field"><label for="phone">Telefon *</label><input id="phone" type="tel" required /></div>
         <div class="field full"><label for="address">Adresse</label><input id="address" /></div><div class="field full"><label for="note">Bemerkung / Einsatzzweck</label><textarea id="note" rows="3"></textarea></div>
@@ -74,6 +74,6 @@
     </div>
   </dialog>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="locations.js"></script><script src="app.js"></script>
 </body>
 </html>
