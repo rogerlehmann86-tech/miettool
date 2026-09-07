@@ -5,7 +5,7 @@ const settingsMessage=(text,error=false)=>{
 async function loadAdminSettings(){
   if(isDemo)return;
   try {
-    settingsMailModule=await import('./mail-content.mjs');
+    settingsMailModule=await import('./mail-content.mjs?v=5.9');
     const [l,t]=await Promise.all([db.from('product_locations').select('*').order('name'),db.from('rental_email_templates').select('*').order('key')]);
     if(l.error||t.error)throw l.error||t.error;
     adminLocations=l.data||[];emailTemplates=t.data||[];
