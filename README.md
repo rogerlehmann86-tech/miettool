@@ -73,3 +73,20 @@ Validierung: 14 lokale Node-Tests sowie Datenbanktests mit zurückgerollten Test
 Die E-Mailfunktion prüft für Partner die Berechtigung zur konkreten Reservation; Direkterfassungsmails bleiben adminpflichtig. Nach einer Entscheidung wird der Kunde informiert. Scheitert der Versand, bleibt der Status gespeichert und unter «Bearbeitete Reservationen» erscheint eine Möglichkeit zum erneuten Versand. Ohne Kunden-E-Mail wird nur der Status gespeichert.
 
 Prüfung: 15 Node-Tests und SQL-Tests mit zurückgerollten Testdaten, einschliesslich fremder Kunden, Bestätigung/Ablehnung und Rechteentzug. Es wurden keine echten Testmails versendet.
+
+
+## v5.13 – Geräteinformationen und PDF-Dokumente
+
+Auf der Kundenseite öffnen Bild, Gerätename und «Weitere Infos» die Geräte-Detailansicht. Diese zeigt Kurzbeschreibung, zusätzliche Beschreibung, technische Angaben, Abholstandort und PDF-Links. Anfragen und Belegung bleiben direkt erreichbar; bei belegtem Zeitraum ist «Anfragen» deaktiviert.
+
+Im Adminbereich: «Mietgeräte verwalten» → «Infos & PDFs». Beschreibung und technische Angaben bearbeiten; bis zu 10 PDFs je Gerät mit je maximal 20 MB hinzufügen. Dokumenttitel können geändert werden. «Entfernen» wird erst beim Speichern wirksam. Für neue Geräte zuerst das Mietgerät anlegen, danach Informationen ergänzen. Partner erhalten keine neuen Schreibrechte.
+
+### Einrichtung
+
+1. Im bestehenden Miettool-Supabase-Projekt `db/upgrade_v5_13.sql` im SQL Editor ausführen. Voraussetzung sind die vorhandenen Upgrades v5.8 bis v5.11 und die Adminprüfung `rental_private.is_admin()`. Das Skript ist wiederholbar und verändert weder Buchungen noch Preise oder Bestand.
+2. Die Frontendänderungen veröffentlichen. Dateien mit Versionsparameter 5.13 laden.
+3. Als Admin ein Gerät mit Beschreibung und Test-PDF speichern. Auf Kundenseite öffnen; PDF, Belegung und Anfrage prüfen.
+
+PDFs sind öffentlich zugängliche Kundenunterlagen. Entfernen löscht die Datei nach erfolgreicher Speicherung aus dem Bucket; bei einem Bereinigungsfehler bleibt sie über den bisherigen Direktlink erreichbar und die Verwaltung meldet dies. Keine vertraulichen Unterlagen hochladen.
+
+Die Datenbankeinrichtung und der reale Upload benötigen Zugriff auf das Supabase-Projekt. Browserprüfungen mit simulierten API-Antworten ersetzen diese Live-Abnahme nicht.

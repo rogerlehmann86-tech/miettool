@@ -12,7 +12,7 @@
   <link rel="icon" type="image/png" href="assets/app-icon.png?v=1" />
   <link rel="manifest" href="manifest.webmanifest?v=1" />
   <title>Mietgeräte | Lehmann Gerätetechnik</title>
-  <link rel="stylesheet" href="styles.css?v=5.12" />
+  <link rel="stylesheet" href="styles.css?v=5.13" />
 </head>
 <body>
   <header class="topbar">
@@ -43,6 +43,13 @@
     <section id="deviceGrid" class="device-grid" aria-live="polite"></section>
     <p class="footer-note">Alle Preise inkl. MwSt. · Mietanfrage wird erst nach unserer Bestätigung verbindlich.</p>
   </main>
+
+  <dialog id="deviceDetailsDialog" class="device-details-dialog" aria-labelledby="deviceDetailsTitle">
+    <div class="device-details-inner"><button type="button" class="dialog-close" id="closeDeviceDetails" aria-label="Schliessen">×</button>
+      <div class="eyebrow">Geräteinformationen</div><h2 id="deviceDetailsTitle"></h2><div id="deviceDetailsContent" aria-live="polite"></div>
+      <div class="details-actions"><button type="button" class="btn" id="detailsCalendar">Belegung anzeigen</button><button type="button" class="btn primary" id="detailsBooking">Anfragen</button></div>
+    </div>
+  </dialog>
 
   <dialog id="bookingDialog">
     <form id="bookingForm" method="dialog">
@@ -81,6 +88,6 @@
     </div>
   </dialog>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=5.12"></script><script src="locations.js?v=5.12"></script><script src="app.js?v=5.12"></script><script src="selector-link.js?v=1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=5.13"></script><script src="locations.js?v=5.13"></script><script src="app.js?v=5.13"></script><script src="device-details.js?v=5.13"></script><script src="selector-link.js?v=1"></script>
 </body>
 </html>

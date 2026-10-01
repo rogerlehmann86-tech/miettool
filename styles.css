@@ -84,3 +84,15 @@ dialog{border:0;border-radius:8px;width:min(720px,calc(100% - 28px));padding:0;b
 @media(max-width:620px){.site-logo{width:132px;height:110px}.location-fields{grid-template-columns:1fr}.location-card{align-items:flex-start;flex-direction:column}.mail-preview{padding:12px}.settings-panel .admin-toolbar{flex-wrap:wrap}}
 
 .assignment-grid{display:grid;gap:8px;max-height:280px;overflow:auto;padding:12px;background:#f7f7f7;border-radius:8px}#partnerApp>.panel{margin-top:22px}#partnerApp .customer-cal-date{font-size:12px}#partnerPasswordForm{margin-top:16px}#partnerAccountArea{margin-top:22px}
+
+/* Geräte-Detailansicht und PDF-Verwaltung */
+.device-details-trigger{border:0;border-bottom:1px solid #eee;width:100%;cursor:pointer;font:inherit;background:#fff}
+.device-name-link{font:inherit;font-weight:inherit;color:inherit;text-align:left;cursor:pointer;background:none;border:0;padding:0}
+.device-name-link:hover{color:var(--red)}.details-button{margin:10px 0;font-size:13px;padding:8px 12px}
+.device-details-trigger:focus-visible,.device-name-link:focus-visible{outline:3px solid var(--red);outline-offset:-3px}
+.device-details-dialog{width:min(760px,calc(100% - 24px))}.device-details-inner{padding:28px;position:relative;border-top:5px solid var(--red)}
+.details-image{width:100%;height:240px;object-fit:contain;background:#fff}.details-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
+.details-documents{list-style:none;padding:0;display:grid;gap:10px}.details-documents a{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;text-decoration:none;overflow-wrap:anywhere}
+.details-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}.document-editor-row{display:flex;align-items:end;gap:8px;margin-bottom:12px}.document-editor-row label{flex:1;min-width:0}.document-editor-row input{width:100%}
+#deviceInfoForm>.field{margin:16px 0}#deviceInfoNotice{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:520px){.device-details-inner{padding:22px 16px}.details-image{height:180px}.details-actions{flex-direction:column}.document-editor-row{flex-wrap:wrap}.document-editor-row label{flex-basis:100%}.document-editor-row .btn{flex:1}}
