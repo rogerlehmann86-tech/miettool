@@ -1,0 +1,128 @@
+[
+  {
+    "device": "ELIET E401",
+    "file": "e401.pdf",
+    "title": "Bedienungsanleitung E401 (Deutsch)",
+    "url": "https://www.elietmachines.com/download_pdf.php?downloadid=122&taal=de",
+    "note": "",
+    "bytes": 7091570,
+    "sha256": "dbaa615d7f8305157ce02a05b961dc8913ba42f5b12299c01f51dedf0aff8e9d"
+  },
+  {
+    "device": "ELIET Country",
+    "file": "country.pdf",
+    "title": "Bedienungsanleitung Maestro City / Country (Deutsch)",
+    "url": "https://www.elietmachines.com/download_pdf.php?downloadid=195&taal=de",
+    "note": "Gemeinsame Modellanleitung; Country-Abschnitt beachten.",
+    "bytes": 18851985,
+    "sha256": "c54b6cb5898410affdb9c5b9f240c35cd142a4094ce56c654dfc1b55491f5aee"
+  },
+  {
+    "device": "Husqvarna 522HDR60X",
+    "file": "522hdr60x.pdf",
+    "title": "Bedienungsanleitung 522HDR60X (inkl. Deutsch)",
+    "url": "https://www.husqvarna.com/hbd/tdrdownload/v2/pub000104632/doc000258805/OM/HsE7z3FBP1tbCx5t9Tseh0fQuJY",
+    "note": "",
+    "bytes": 4275173,
+    "sha256": "00f1036dd677927eb0ab382001d6a438e0136101d7a2dd169aa2087ed909142c"
+  },
+  {
+    "device": "Husqvarna 550 XP",
+    "file": "550xp-klein.pdf",
+    "title": "Bedienungsanleitung 550 XP, erste Generation (inkl. Deutsch)",
+    "url": "https://www.husqvarna.com/hbd/tdrdownload/v2/pub000073520/doc000125502/OM/AsqRQ5wGkVy_H8lgj5Q8sqrwO_k",
+    "note": "Ausgabe DE/SL unter 20 MB. Nicht die Anleitung der Mark II verwenden.",
+    "bytes": 18655009,
+    "sha256": "de01a225d90d535744a36f9be691336d292f7680b9afafb1279f546172adbe67"
+  },
+  {
+    "device": "STIHL MS 212",
+    "file": "ms212.pdf",
+    "title": "STIHL MS 212 – Gebrauchsanleitung (Deutsch)",
+    "url": "https://ssc.stihl.com/tsa/techdoc-documents/DVS_STIHL%2FZBA%2FZBA%2F0458-221-7521-A_ZBA_05_01.pdf",
+    "note": "",
+    "bytes": 3980766,
+    "sha256": "a14464826cadcff17f7f52ca992cd14b8535cad51ebde991ddebf42e636fe93e"
+  },
+  {
+    "device": "STIHL KM 94 R",
+    "file": "km94.pdf",
+    "title": "STIHL KM 94 R – Gebrauchsanleitung (Deutsch)",
+    "url": "https://ssc.stihl.com/tsa/techdoc-documents/DVS_STIHL%2FZBA%2FZBA%2F0458-467-9421-C_ZBA_04_01.pdf",
+    "note": "Kombimotor und Werkzeug benötigen je eine Anleitung.",
+    "bytes": 2366688,
+    "sha256": "4abc5ef909226ce128c7b1c76975e2e3ed1097a628190e393dcb1db3273bd82d"
+  },
+  {
+    "device": "STIHL KM 131 R",
+    "file": "km131.pdf",
+    "title": "STIHL KM 131 R – Gebrauchsanleitung (Deutsch)",
+    "url": "https://ssc.stihl.com/tsa/techdoc-documents/DVS_STIHL%2FZBA%2FZBA%2F0458-436-0021-B_ZBA_06_01.pdf",
+    "note": "Kombimotor und Werkzeug benötigen je eine Anleitung.",
+    "bytes": 1124152,
+    "sha256": "e7add41b2796fbec3c54644a69dc55885ef66eeba359c7405af08e7d9494302c"
+  },
+  {
+    "device": "STIHL HL-KM",
+    "file": "hl-km.pdf",
+    "title": "STIHL HL-KM – Gebrauchsanleitung (Deutsch)",
+    "url": "https://ssc.stihl.com/tsa/techdoc-documents/DVS_STIHL%2FZBA%2FZBA%2F0458-475-9421-D_ZBA_05_01.pdf",
+    "note": "Kombimotor und Werkzeug benötigen je eine Anleitung.",
+    "bytes": 1629638,
+    "sha256": "dbe467742eb76de974df2ad3886b530a07159560d62b6029fb88369ef2b070f3"
+  },
+  {
+    "device": "STIHL FS-KM",
+    "file": "fs-km-current.pdf",
+    "title": "STIHL FS-KM – Gebrauchsanleitung (Deutsch)",
+    "url": "https://ssc.stihl.com/tsa/techdoc-documents/DVS_STIHL%2FZBA%2FZBA%2F0458-407-9421-C_ZBA_09_01.pdf",
+    "note": "Kombimotor und Werkzeug benötigen je eine Anleitung.",
+    "bytes": 4220606,
+    "sha256": "d0195e54d4910300c1d20df9c18c7e77eee795bdb72dc35fa60644d7f7c956ba"
+  },
+  {
+    "device": "STIHL BT 130",
+    "file": "bt130.pdf",
+    "title": "STIHL BT 130 – Gebrauchsanleitung (Deutsch)",
+    "url": "https://ssc.stihl.com/tsa/techdoc-documents/DVS_STIHL%2FZBA%2FZBA%2F0458-429-9421-A_ZBA_04_01.pdf",
+    "note": "",
+    "bytes": 3615368,
+    "sha256": "99c1aabd8765e8a173a90ae4ebc1c63eb135876ad75dcfbb864a4542c49417a8"
+  },
+  {
+    "device": "Kärcher HD 5/12 CX FR",
+    "file": "kaercher-hd512cx-de.pdf",
+    "title": "Kärcher HD 5/12 C / CX – deutsche Anleitung mit Abbildungen",
+    "url": "https://s1.kaercher-media.com/documents/manuals/raw/000/BTA-5475903-000-06.pdf",
+    "note": "Auszug: Originalseiten 1–13 mit vollständigem deutschen Abschnitt; PDF für Upload optimiert. CH/EU-Datenspalte nach Typenschild wählen. Separate Anleitung des FR-Flächenreinigers bei genauer Zubehörbezeichnung ergänzen.",
+    "bytes": 3331738,
+    "sha256": "750b4b62aaf44d96334995992aba03c44f311fbb7311cb4d28a6579405e8306d"
+  },
+  {
+    "device": "Binderberger H6",
+    "file": "h6.pdf",
+    "title": "Binderberger H6 / H8 / SP8 – Bedienungsanleitung (Deutsch)",
+    "url": "https://binderberger.com/wp-content/uploads/2024/04/Bedienungsanleitung-stehend-Kurzholzspalter-2022_05.pdf",
+    "note": "H6 E-Abschnitt verwenden; Ausgabe 2020-10. Baujahr und Ausführung abgleichen.",
+    "bytes": 1093377,
+    "sha256": "be3934efffdd45d6ef049307c161486b90593f4cb7de43e0e4cd75a65169fb29"
+  },
+  {
+    "device": "Billy Goat PL1803V",
+    "file": "pl1803v.pdf",
+    "title": "Billy Goat PL1803V / PL1803VB – Bedienungsanleitung (Deutsch)",
+    "url": "https://bsintek.basco.com/BriggsDocumentDisplay/default.aspx?filename=ioktwNsGp9ZVj5K1w",
+    "note": "381519DE, Ausgabe B; Serienbereich beginnt gemäss Herstellerzuordnung bei 010419001. Seriennummer und Motorunterlagen prüfen.",
+    "bytes": 4998942,
+    "sha256": "d007ccca528a0319f426dfc3f5ab2bc040aec4b2f15781655ae35e3fe1739ae7"
+  },
+  {
+    "device": "Honda EU20i",
+    "file": "eu20i.pdf",
+    "title": "Honda EU20i – Bedienungsanleitung (Deutsch)",
+    "url": "https://cf.hondappsv.com/files/OM/OM000201HME/36Z076170_Ger_print.pdf",
+    "note": "",
+    "bytes": 8612247,
+    "sha256": "52429521bae1f5af696c27b7a9f30f272eceb6ed488608bdb925206e378952ea"
+  }
+]
