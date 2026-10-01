@@ -89,6 +89,10 @@ dialog{border:0;border-radius:8px;width:min(720px,calc(100% - 28px));padding:0;b
 .device-details-trigger{border:0;border-bottom:1px solid #eee;width:100%;cursor:pointer;font:inherit;background:#fff}
 .device-name-link{font:inherit;font-weight:inherit;color:inherit;text-align:left;cursor:pointer;background:none;border:0;padding:0}
 .device-name-link:hover{color:var(--red)}.details-button{margin:10px 0;font-size:13px;padding:8px 12px}
+.device-kind{display:block;font-weight:750;line-height:1.25}.device-model{display:block;font-size:.72em;font-weight:400;line-height:1.4;color:#62666b;margin-top:4px}
+.energy-badge{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px 10px;border:1px solid;border-left-width:5px;border-radius:7px;padding:10px 14px;margin:0 0 16px;font-size:14px;max-width:100%;overflow-wrap:anywhere}
+.energy-caption{flex-basis:100%;font-size:10px;font-weight:650;letter-spacing:.05em;text-transform:uppercase}.energy-note{font-size:13px}
+.energy-blue{background:#e6f1ff;border-color:#2671c5;color:#144779}.energy-green{background:#e8f5e9;border-color:#38804b;color:#205a30}.energy-yellow{background:#fff5c2;border-color:#bd9700;color:#604d00}.energy-red{background:#ffe9e7;border-color:#c63931;color:#8e2420}.energy-orange{background:#fff0dc;border-color:#cc720a;color:#834300}
 .device-details-trigger:focus-visible,.device-name-link:focus-visible{outline:3px solid var(--red);outline-offset:-3px}
 .device-details-dialog{width:min(760px,calc(100% - 24px))}.device-details-inner{padding:28px;position:relative;border-top:5px solid var(--red)}
 .details-image{width:100%;height:240px;object-fit:contain;background:#fff}.details-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}

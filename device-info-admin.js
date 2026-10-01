@@ -33,16 +33,19 @@
     if (!product) return;
     const token = ++request;
     currentId = id; entries = []; original = [];
-    el('deviceInfoForm').reset(); renderDocuments();
+    el('deviceInfoForm').reset(); renderDocuments(); renderEnergyPreview();
     el('deviceInfoAdminTitle').textContent = product.name + ' – Infos & PDFs';
     el('saveDeviceInfo').disabled = true; notice('Informationen werden geladen …');
     el('deviceInfoAdminDialog').showModal();
     try {
-      const {data, error} = await db.from('product_details').select('description,specifications,documents').eq('product_id', id).maybeSingle();
+      const {data, error} = await db.from('product_details').select('description,specifications,documents,energy_source,energy_note').eq('product_id', id).maybeSingle();
       if (error) throw error;
       if (token !== request) return;
       el('deviceDescription').value = data?.description || '';
       el('deviceSpecifications').value = data?.specifications || '';
+      el('deviceEnergySource').value = data?.energy_source || '';
+      el('deviceEnergyNote').value = data?.energy_note || '';
+      renderEnergyPreview();
       original = data?.documents || [];
       entries = original.map(d => ({...d})); renderDocuments();
       el('saveDeviceInfo').disabled = false; notice('');
@@ -78,7 +81,8 @@
     saving = true;
     const uploaded = [], snapshot = entries.map(d => ({...d})), productId = currentId;
     const description = el('deviceDescription').value, specifications = el('deviceSpecifications').value;
-    el('deviceInfoForm').querySelectorAll('input,textarea,button').forEach(node => { node.disabled = true; });
+    const energy_source = el('deviceEnergySource').value || null, energy_note = el('deviceEnergyNote').value.trim();
+    el('deviceInfoForm').querySelectorAll('input,textarea,select,button').forEach(node => { node.disabled = true; });
     let committed = false;
     try {
       notice('Informationen und PDFs werden gespeichert …');
@@ -93,7 +97,7 @@
         }
         documents.push({path, title:entry.title.trim()});
       }
-      const {error} = await db.from('product_details').upsert({product_id:productId, description, specifications, documents}, {onConflict:'product_id'});
+      const {error} = await db.from('product_details').upsert({product_id:productId, description, specifications, documents, energy_source, energy_note}, {onConflict:'product_id'});
       if (error) throw error;
       committed = true;
       const removed = original.filter(d => !documents.some(next => next.path === d.path)).map(d => d.path);
@@ -106,7 +110,12 @@
       notice('Speichern fehlgeschlagen: ' + error.message + '. Ihre Eingaben bleiben erhalten.', true);
     } finally {
       saving = false;
-      el('deviceInfoForm').querySelectorAll('input,textarea,button').forEach(node => { node.disabled = false; });
+      el('deviceInfoForm').querySelectorAll('input,textarea,select,button').forEach(node => { node.disabled = false; });
     }
   });
+  function renderEnergyPreview() {
+    el('deviceEnergyPreview').innerHTML = deviceEnergyHtml({energy_source:el('deviceEnergySource').value, energy_note:el('deviceEnergyNote').value.trim()});
+  }
+  el('deviceEnergySource').addEventListener('change', renderEnergyPreview);
+  el('deviceEnergyNote').addEventListener('input', renderEnergyPreview);
 })();
